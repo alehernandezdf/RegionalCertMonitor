@@ -1,0 +1,528 @@
+{
+    "refresh":  "1m",
+    "panels":  [
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "fillOpacity":  10,
+                                                                           "thresholdsStyle":  {
+                                                                                                   "mode":  "area"
+                                                                                               },
+                                                                           "showPoints":  "auto",
+                                                                           "drawStyle":  "line",
+                                                                           "lineWidth":  2,
+                                                                           "pointSize":  5
+                                                                       },
+                                                            "decimals":  4,
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "transparent"
+                                                                                             },
+                                                                                             {
+                                                                                                 "value":  5,
+                                                                                                 "color":  "rgba(255,0,0,0.15)"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           },
+                                                            "unit":  "none"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "mode":  "fixed",
+                                                                                                      "fixedColor":  "#3274D9"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "ASMX"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "mode":  "fixed",
+                                                                                                      "fixedColor":  "#E0B400"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "API"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "id":  1,
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  8,
+                                       "x":  0,
+                                       "h":  10
+                                   },
+                       "datasource":  {
+                                          "type":  "grafana-postgresql-datasource",
+                                          "uid":  "monitoreo-pg"
+                                      },
+                       "title":  "Guatemala 🇬🇹",
+                       "targets":  [
+                                       {
+                                           "rawSql":  "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"ASMX\" FROM monitoring_results WHERE country = \u0027GT\u0027 AND certification_type = \u0027ASMX\u0027 AND $__timeFilter(created_at) ORDER BY created_at",
+                                           "format":  "time_series",
+                                           "refId":  "A"
+                                       },
+                                       {
+                                           "rawSql":  "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"API\" FROM monitoring_results WHERE country = \u0027GT\u0027 AND certification_type = \u0027NUC\u0027 AND $__timeFilter(created_at) ORDER BY created_at",
+                                           "format":  "time_series",
+                                           "refId":  "B"
+                                       }
+                                   ],
+                       "type":  "timeseries",
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "min",
+                                                                    "max",
+                                                                    "mean",
+                                                                    "lastNotNull"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "mode":  "multi"
+                                                   }
+                                   }
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "fillOpacity":  10,
+                                                                           "thresholdsStyle":  {
+                                                                                                   "mode":  "area"
+                                                                                               },
+                                                                           "showPoints":  "auto",
+                                                                           "drawStyle":  "line",
+                                                                           "lineWidth":  2,
+                                                                           "pointSize":  5
+                                                                       },
+                                                            "decimals":  4,
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "transparent"
+                                                                                             },
+                                                                                             {
+                                                                                                 "value":  5,
+                                                                                                 "color":  "rgba(255,0,0,0.15)"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           },
+                                                            "unit":  "none"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "mode":  "fixed",
+                                                                                                      "fixedColor":  "#3274D9"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "ASMX"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "mode":  "fixed",
+                                                                                                      "fixedColor":  "#E0B400"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "API"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "id":  2,
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  8,
+                                       "x":  8,
+                                       "h":  10
+                                   },
+                       "datasource":  {
+                                          "type":  "grafana-postgresql-datasource",
+                                          "uid":  "monitoreo-pg"
+                                      },
+                       "title":  "El Salvador 🇸🇻",
+                       "targets":  [
+                                       {
+                                           "rawSql":  "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"ASMX\" FROM monitoring_results WHERE country = \u0027SV\u0027 AND certification_type = \u0027ASMX\u0027 AND $__timeFilter(created_at) ORDER BY created_at",
+                                           "format":  "time_series",
+                                           "refId":  "A"
+                                       },
+                                       {
+                                           "rawSql":  "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"API\" FROM monitoring_results WHERE country = \u0027SV\u0027 AND certification_type = \u0027NUC\u0027 AND $__timeFilter(created_at) ORDER BY created_at",
+                                           "format":  "time_series",
+                                           "refId":  "B"
+                                       }
+                                   ],
+                       "type":  "timeseries",
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "min",
+                                                                    "max",
+                                                                    "mean",
+                                                                    "lastNotNull"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "mode":  "multi"
+                                                   }
+                                   }
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "fillOpacity":  10,
+                                                                           "thresholdsStyle":  {
+                                                                                                   "mode":  "area"
+                                                                                               },
+                                                                           "showPoints":  "auto",
+                                                                           "drawStyle":  "line",
+                                                                           "lineWidth":  2,
+                                                                           "pointSize":  5
+                                                                       },
+                                                            "decimals":  4,
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "transparent"
+                                                                                             },
+                                                                                             {
+                                                                                                 "value":  5,
+                                                                                                 "color":  "rgba(255,0,0,0.15)"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           },
+                                                            "unit":  "none"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "mode":  "fixed",
+                                                                                                      "fixedColor":  "#3274D9"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "ASMX"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "mode":  "fixed",
+                                                                                                      "fixedColor":  "#E0B400"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "API"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "id":  3,
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  8,
+                                       "x":  16,
+                                       "h":  10
+                                   },
+                       "datasource":  {
+                                          "type":  "grafana-postgresql-datasource",
+                                          "uid":  "monitoreo-pg"
+                                      },
+                       "title":  "Panama 🇵🇦",
+                       "targets":  [
+                                       {
+                                           "rawSql":  "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"ASMX\" FROM monitoring_results WHERE country = \u0027PA\u0027 AND certification_type = \u0027ASMX\u0027 AND $__timeFilter(created_at) ORDER BY created_at",
+                                           "format":  "time_series",
+                                           "refId":  "A"
+                                       },
+                                       {
+                                           "rawSql":  "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"API\" FROM monitoring_results WHERE country = \u0027PA\u0027 AND certification_type = \u0027NUC\u0027 AND $__timeFilter(created_at) ORDER BY created_at",
+                                           "format":  "time_series",
+                                           "refId":  "B"
+                                       }
+                                   ],
+                       "type":  "timeseries",
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "min",
+                                                                    "max",
+                                                                    "mean",
+                                                                    "lastNotNull"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "mode":  "multi"
+                                                   }
+                                   }
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "fillOpacity":  10,
+                                                                           "thresholdsStyle":  {
+                                                                                                   "mode":  "area"
+                                                                                               },
+                                                                           "showPoints":  "auto",
+                                                                           "drawStyle":  "line",
+                                                                           "lineWidth":  2,
+                                                                           "pointSize":  5
+                                                                       },
+                                                            "decimals":  4,
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "transparent"
+                                                                                             },
+                                                                                             {
+                                                                                                 "value":  5,
+                                                                                                 "color":  "rgba(255,0,0,0.15)"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           },
+                                                            "unit":  "none"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "mode":  "fixed",
+                                                                                                      "fixedColor":  "#3274D9"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "ASMX"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "mode":  "fixed",
+                                                                                                      "fixedColor":  "#E0B400"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "API"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "id":  4,
+                       "gridPos":  {
+                                       "y":  10,
+                                       "w":  12,
+                                       "x":  0,
+                                       "h":  10
+                                   },
+                       "datasource":  {
+                                          "type":  "grafana-postgresql-datasource",
+                                          "uid":  "monitoreo-pg"
+                                      },
+                       "title":  "Republica Dominicana 🇩🇴",
+                       "targets":  [
+                                       {
+                                           "rawSql":  "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"ASMX\" FROM monitoring_results WHERE country = \u0027DO\u0027 AND certification_type = \u0027ASMX\u0027 AND $__timeFilter(created_at) ORDER BY created_at",
+                                           "format":  "time_series",
+                                           "refId":  "A"
+                                       },
+                                       {
+                                           "rawSql":  "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"API\" FROM monitoring_results WHERE country = \u0027DO\u0027 AND certification_type = \u0027NUC\u0027 AND $__timeFilter(created_at) ORDER BY created_at",
+                                           "format":  "time_series",
+                                           "refId":  "B"
+                                       }
+                                   ],
+                       "type":  "timeseries",
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "min",
+                                                                    "max",
+                                                                    "mean",
+                                                                    "lastNotNull"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "mode":  "multi"
+                                                   }
+                                   }
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "fillOpacity":  10,
+                                                                           "thresholdsStyle":  {
+                                                                                                   "mode":  "area"
+                                                                                               },
+                                                                           "showPoints":  "auto",
+                                                                           "drawStyle":  "line",
+                                                                           "lineWidth":  2,
+                                                                           "pointSize":  5
+                                                                       },
+                                                            "decimals":  4,
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "transparent"
+                                                                                             },
+                                                                                             {
+                                                                                                 "value":  5,
+                                                                                                 "color":  "rgba(255,0,0,0.15)"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           },
+                                                            "unit":  "none"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "mode":  "fixed",
+                                                                                                      "fixedColor":  "#3274D9"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "ASMX"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "mode":  "fixed",
+                                                                                                      "fixedColor":  "#E0B400"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "API"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "id":  5,
+                       "gridPos":  {
+                                       "y":  10,
+                                       "w":  12,
+                                       "x":  12,
+                                       "h":  10
+                                   },
+                       "datasource":  {
+                                          "type":  "grafana-postgresql-datasource",
+                                          "uid":  "monitoreo-pg"
+                                      },
+                       "title":  "Costa Rica 🇨��",
+                       "targets":  [
+                                       {
+                                           "rawSql":  "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"ASMX\" FROM monitoring_results WHERE country = \u0027CR\u0027 AND certification_type = \u0027ASMX\u0027 AND $__timeFilter(created_at) ORDER BY created_at",
+                                           "format":  "time_series",
+                                           "refId":  "A"
+                                       },
+                                       {
+                                           "rawSql":  "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"API\" FROM monitoring_results WHERE country = \u0027CR\u0027 AND certification_type = \u0027NUC\u0027 AND $__timeFilter(created_at) ORDER BY created_at",
+                                           "format":  "time_series",
+                                           "refId":  "B"
+                                       }
+                                   ],
+                       "type":  "timeseries",
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "min",
+                                                                    "max",
+                                                                    "mean",
+                                                                    "lastNotNull"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "mode":  "multi"
+                                                   }
+                                   }
+                   }
+               ],
+    "uid":  "monitoreo-unificado",
+    "time":  {
+                 "to":  "now",
+                 "from":  "now-30m"
+             },
+    "editable":  true,
+    "title":  "Monitoreo Unificado - Digifact",
+    "graphTooltip":  1
+}

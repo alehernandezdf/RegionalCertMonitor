@@ -1,0 +1,90 @@
+# BEGIN-FEAT::BE-672::2026-03-17::AHL::Docker Compose con Worker, PostgreSQL 16, pgAdmin
+services:
+  monitoreo-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: monitoreo-worker
+    environment:
+      - DOTNET_ENVIRONMENT=Development
+      - ConnectionStrings__PostgreSQL=Host=postgres;Port=5432;Database=monitoreo;Username=monitoreo;Password=monitoreo_dev
+      - Monitoring__Environment=Development
+    volumes:
+      - ./src/Monitoreo.Worker/appsettings.json:/app/appsettings.json:ro
+      - ./src/Monitoreo.Worker/appsettings.CR.json:/app/appsettings.CR.json:ro
+      - ./src/Monitoreo.Worker/appsettings.Secrets.json:/app/appsettings.Secrets.json:ro
+      - ./src/Monitoreo.Worker/Templates:/app/Templates:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - monitoreo-net
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: monitoreo-postgres
+    environment:
+      POSTGRES_DB: monitoreo
+      POSTGRES_USER: monitoreo
+      POSTGRES_PASSWORD: monitoreo_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./src/Monitoreo.Worker/Database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U monitoreo -d monitoreo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - monitoreo-net
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: monitoreo-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@digifact.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_LISTEN_PORT: 5050
+    ports:
+      - "5050:5050"
+    volumes:
+      - ./pgadmin-servers.json:/pgadmin4/servers.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - monitoreo-net
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: monitoreo-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: digifact
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/monitoreo.json
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafanadata:/var/lib/grafana
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - monitoreo-net
+
+volumes:
+  pgdata:
+  grafanadata:
+
+networks:
+  monitoreo-net:
+    driver: bridge
+# END-FEAT::BE-672::2026-03-17::AHL::Docker Compose con Worker, PostgreSQL 16, pgAdmin

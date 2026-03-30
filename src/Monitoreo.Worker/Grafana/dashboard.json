@@ -1,0 +1,129 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_POSTGRESQL",
+      "label": "PostgreSQL",
+      "description": "Monitoreo PostgreSQL datasource",
+      "type": "datasource",
+      "pluginId": "grafana-postgresql-datasource"
+    }
+  ],
+  "title": "Monitoreo Unificado - Digifact",
+  "uid": "monitoreo-unificado",
+  "editable": true,
+  "graphTooltip": 1,
+  "templating": {
+    "list": [
+      {
+        "name": "country",
+        "type": "custom",
+        "current": { "text": "All", "value": "All" },
+        "options": [
+          { "text": "All", "value": "All", "selected": true },
+          { "text": "GT", "value": "GT" },
+          { "text": "SV", "value": "SV" },
+          { "text": "DO", "value": "DO" },
+          { "text": "CR", "value": "CR" },
+          { "text": "PA", "value": "PA" }
+        ],
+        "query": "All,GT,SV,DO,CR,PA",
+        "label": "País"
+      },
+      {
+        "name": "cert_type",
+        "type": "custom",
+        "current": { "text": "All", "value": "All" },
+        "options": [
+          { "text": "All", "value": "All", "selected": true },
+          { "text": "ASMX", "value": "ASMX" },
+          { "text": "NUC", "value": "NUC" }
+        ],
+        "query": "All,ASMX,NUC",
+        "label": "Tipo"
+      }
+    ]
+  },
+  "time": { "from": "now-6h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Disponibilidad por País (%)",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 0 },
+      "datasource": { "uid": "${DS_POSTGRESQL}" },
+      "targets": [{
+        "rawSql": "SELECT country, ROUND(100.0 * SUM(CASE WHEN result_status THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0), 2) AS availability FROM monitoring_results WHERE created_at >= NOW() - INTERVAL '6 hours' AND ('$country' = 'All' OR country = '$country') AND ('$cert_type' = 'All' OR certification_type = '$cert_type') GROUP BY country ORDER BY country",
+        "format": "table"
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": { "steps": [
+            { "color": "red", "value": null },
+            { "color": "yellow", "value": 95 },
+            { "color": "green", "value": 99 }
+          ]}
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" }
+    },
+    {
+      "id": 2,
+      "title": "Tiempos de Respuesta (ms)",
+      "type": "timeseries",
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 6 },
+      "datasource": { "uid": "${DS_POSTGRESQL}" },
+      "targets": [{
+        "rawSql": "SELECT created_at AS time, transaction_time_ms AS value, country || ' - ' || certification_type AS metric FROM monitoring_results WHERE $__timeFilter(created_at) AND ('$country' = 'All' OR country = '$country') AND ('$cert_type' = 'All' OR certification_type = '$cert_type') ORDER BY created_at",
+        "format": "time_series"
+      }],
+      "fieldConfig": { "defaults": { "unit": "ms" } }
+    },
+    {
+      "id": 3,
+      "title": "Alertas Activas (Fallos Recientes)",
+      "type": "table",
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 6 },
+      "datasource": { "uid": "${DS_POSTGRESQL}" },
+      "targets": [{
+        "rawSql": "SELECT created_at, country, certification_type, endpoint, transaction_time_ms, event_error_message FROM monitoring_results WHERE result_status = false AND created_at >= NOW() - INTERVAL '1 hour' AND ('$country' = 'All' OR country = '$country') AND ('$cert_type' = 'All' OR certification_type = '$cert_type') ORDER BY created_at DESC LIMIT 50",
+        "format": "table"
+      }]
+    },
+    {
+      "id": 4,
+      "title": "Promedio Tiempo de Respuesta por Hora",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "datasource": { "uid": "${DS_POSTGRESQL}" },
+      "targets": [{
+        "rawSql": "SELECT date_trunc('hour', created_at) AS time, AVG(transaction_time_ms) AS value, country || ' - ' || certification_type AS metric FROM monitoring_results WHERE $__timeFilter(created_at) AND ('$country' = 'All' OR country = '$country') AND ('$cert_type' = 'All' OR certification_type = '$cert_type') GROUP BY time, country, certification_type ORDER BY time",
+        "format": "time_series"
+      }],
+      "fieldConfig": { "defaults": { "unit": "ms" } }
+    },
+    {
+      "id": 5,
+      "title": "Promedio Tiempo de Respuesta por Día",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "datasource": { "uid": "${DS_POSTGRESQL}" },
+      "targets": [{
+        "rawSql": "SELECT date_trunc('day', created_at) AS time, AVG(transaction_time_ms) AS value, country || ' - ' || certification_type AS metric FROM monitoring_results WHERE $__timeFilter(created_at) AND ('$country' = 'All' OR country = '$country') AND ('$cert_type' = 'All' OR certification_type = '$cert_type') GROUP BY time, country, certification_type ORDER BY time",
+        "format": "time_series"
+      }],
+      "fieldConfig": { "defaults": { "unit": "ms" } }
+    },
+    {
+      "id": 6,
+      "title": "Conteo Éxitos vs Fallos",
+      "type": "barchart",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 24 },
+      "datasource": { "uid": "${DS_POSTGRESQL}" },
+      "targets": [{
+        "rawSql": "SELECT country || ' - ' || certification_type AS metric, SUM(CASE WHEN result_status THEN 1 ELSE 0 END) AS exitosos, SUM(CASE WHEN NOT result_status THEN 1 ELSE 0 END) AS fallidos FROM monitoring_results WHERE $__timeFilter(created_at) AND ('$country' = 'All' OR country = '$country') AND ('$cert_type' = 'All' OR certification_type = '$cert_type') GROUP BY country, certification_type ORDER BY country",
+        "format": "table"
+      }]
+    }
+  ]
+}

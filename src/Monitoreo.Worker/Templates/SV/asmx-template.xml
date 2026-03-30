@@ -1,0 +1,225 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Root>
+    <Version>1</Version>
+    <CountryCode>SV</CountryCode>
+    <Header>
+        <DocType>01</DocType>
+        <GUID>36ACFBC6-65AA-4BC9-A81B-A6E6B362EB0C</GUID>
+        <IssuedDateTime>2023-08-23T10:30:00-06:00</IssuedDateTime>
+        <AdditionalIssueType>01</AdditionalIssueType>
+        <Currency>USD</Currency>
+        <AdditionalIssueDocInfo>
+            <Info Name="Secuencial" Value="000900020010003"/>
+            <Info Name="CodEstPuntoV" Value="M001P001"/> 
+            <Info Name="TipoModelo" Value="1"/>
+            <Info Name="TipoOperacion" Value="1"/>
+            <Info Name="NOTIFICAR_DGI" Value="NO"/>
+        </AdditionalIssueDocInfo>
+    </Header>
+    
+    <Seller>
+        <TaxID>06543210123456</TaxID> 
+        <TaxIDAdditionalInfo>
+            <Info Name="NRC" Value="3182701"/>
+            <Info Name="CodigoActividad" Value="62090"/>
+            <Info Name="DescActividad" Value="Otras actividades de tecnología de información y servicios de computadora"/>
+        </TaxIDAdditionalInfo>
+        <Name>TEST EL SALVADOR, SOCIEDAD ANONIMA</Name>
+        <Contact>
+            <PhoneList>
+                <Phone>12345678</Phone>
+            </PhoneList>
+            <EmailList>
+                <Email>desarrollo@digifact.com.sv</Email>
+            </EmailList>
+        </Contact>
+        <AdditionlInfo>
+            <Info Name="NombreComercial" Value="Digifact Servicios S.A"/>
+            <Info Name="TipoEstablecimiento" Value="01"/>
+            <Info Name="CodEstablecimientoMH" Value="M001"/>
+            <Info Name="CodEstablecimiento" Value="M001"/>
+            <Info Name="CodPuntoVentaMH" Value="P001"/>
+            <Info Name="CodPuntoVenta" Value="P001"/>
+        </AdditionlInfo>
+        <AddressInfo>
+            <Address>direccion de prueba, residencial de prueba</Address>
+            <District>23</District>
+            <State>06</State>
+            <Country>SV</Country>
+        </AddressInfo>
+    </Seller>
+    
+    <Buyer>
+        <TaxID>3730617490101</TaxID>
+        <TaxIDType>03</TaxIDType>
+        <TaxIDAdditionalInfo>
+            <!-- <Info Name="NRC" Value="33563411"/> --> <!-- nrc -->
+            <Info Name="CodigoActividad" Value="62010"/>
+            <Info Name="DescActividad" Value="Programacion Informatica"/>
+        </TaxIDAdditionalInfo>
+        <Name>Receptor de Prueba</Name>
+        <Contact>
+            <PhoneList>
+                <Phone>16754321</Phone>
+            </PhoneList>
+            <EmailList>
+                <Email>receptor.prueba@digifact.com.gt</Email>
+            </EmailList>
+        </Contact>
+        <AddressInfo>
+            <Address>direccion del receptor de prueba</Address>
+            <District>14</District>
+            <State>01</State>
+            <Country>SV</Country>
+        </AddressInfo>
+    </Buyer>
+    
+    <Items>
+        <Item Number="1">
+            <Codes>
+                <Code Name="Codigo" Value="PRODU-0000000001"/>
+            </Codes>
+            <Type>1</Type>
+            <Description>CARRO HOTWHEELS, TOYOTA SUPRA FyF 2</Description> <!-- descripcion -->
+            <Qty>3.00</Qty>
+            <UnitOfMeasure>59</UnitOfMeasure>
+            <Price>3.00</Price>
+            <Discounts> 
+                <Discount>
+                    <Amount>0.00</Amount>
+                </Discount>
+            </Discounts>
+            <Charges>
+                <Charge>
+                    <Code>VENTA_GRAVADA</Code>
+                    <Amount>9.00</Amount>
+                </Charge>
+            </Charges>
+            <Totals>
+                <TotalItem>9.00</TotalItem>
+            </Totals>
+            <AdditionalInfo>
+                <Info Name="PrecioSugeridoVenta" Value="0.00"/>
+                <Info Name="IvaItem" Value="1.04"/> <!-- iva item -->
+            </AdditionalInfo>
+        </Item>
+    </Items>
+    
+    <Totals>
+        <!-- 
+        <TotalTaxes>
+            <TotalTax>
+                <Code>C3</Code>
+                <Description>Impuesto al Valor Agregado (exportaciones) 0%</Description>
+                <Amount>0.00</Amount>
+            </TotalTax>
+        </TotalTaxes>
+        -->
+        <TotalCharges>
+            <TotalCharge>
+                <Code>TOTAL_NO_SUJETA</Code>
+                <Amount>0.00</Amount> <!-- totalNoSuj -->
+            </TotalCharge>
+            <TotalCharge>
+                <Code>TOTAL_EXENTA</Code>
+                <Amount>0.00</Amount> <!-- totalExenta -->
+            </TotalCharge>
+            <TotalCharge>
+                <Code>TOTAL_GRAVADA</Code>
+                <Amount>9.00</Amount> <!-- totalGravada -->
+            </TotalCharge>
+            <TotalCharge>
+                <Code>TOTAL_NO_GRAVADO</Code>
+                <Amount>0.00</Amount>
+            </TotalCharge>
+        </TotalCharges>
+        <TotalDiscounts>
+            <Discount>
+                <Code>NO_SUJETA</Code>
+                <Amount>0.00</Amount> <!-- descuNoSuj -->
+            </Discount>
+            <Discount>
+                <Code>EXENTA</Code>
+                <Amount>0.00</Amount> <!-- descuExenta -->
+            </Discount>
+            <Discount>
+                <Code>GRAVADA</Code>
+                <Amount>0.00</Amount> <!-- descuGravada -->
+            </Discount>
+            <Discount>
+                <Code>PORCENTAJE_DESCUENTO</Code> <!-- descuento sobre la sumatoria de ventas (subTotalVentas) -->
+                <Amount>0.00</Amount> <!-- porcentajeDescuento, indicar el monto de porcentaje sobre 100, ej. 15% -> 15.00  -->
+            </Discount>
+        </TotalDiscounts>
+        <GrandTotal>
+            <InvoiceTotal>9.00</InvoiceTotal> <!-- total a pagar -->
+        </GrandTotal>
+        <InWords>Nueve dolares con 00/100</InWords> <!-- totalLetras -->
+        <AdditionalInfo>
+            <Info Name="IvaRetenido" Value="0.00"/> <!-- ivaRete1 -->
+            <Info Name="RetencionRenta" Value="0.00"/> <!-- reteRenta -->
+            <Info Name="SaldoFavor" Value="0.00"/> <!-- Saldo a favor, el valor debe ser negativo -->
+            <Info Name="CondicionOperacion" Value="1"/> <!-- condicionOperacion -->
+            <Info Name="NumPagoElectronico" Value="81JEJJAJSNDCN"/> <!-- numPagoElectronico -->
+        </AdditionalInfo>
+    </Totals>
+    
+    <Payments>
+        <Payment>
+            <Code>01</Code> <!-- pagos.codigo -->
+            <Amount>8.00</Amount> <!-- pagos.montoPago -->
+        </Payment>
+        <Payment>
+            <Code>02</Code> <!-- pagos.codigo -->
+            <Amount>1.00</Amount> <!-- pagos.montoPago -->
+            <AditionalData>
+                <Info Name="Referencia" Value="124FF"/> 
+                <Info Name="Plazo" Value="01"/>
+                <Info Name="Periodo" Value="0"/>
+            </AditionalData>
+        </Payment>
+    </Payments>
+    
+    <AdditionalDocumentInfo>
+        <AdditionalInfo>
+            <AditionalData>
+                <!-- Otros Documentos Relacionados -->
+                <Data Name="OTROS_DOC_RELACIONADOS">
+                    <Info Name="CodigoDocAsociado" Value="1"/> <!-- codDocAsociado -->
+                    <Info Name="DescDoc" Value="Resoluciones, licencias, permisos, contratos, cartas de venta, etc"/> <!-- descDocumento -->
+                    <Info Name="DetalleDoc" Value="Descripcion de los datos importantes del tipo de documento asociado"/> <!-- detalleDocumento -->
+                </Data>
+                <Data Name="OTROS_DOC_RELACIONADOS">
+                    <Info Name="CodigoDocAsociado" Value="2"/> <!-- codDocAsociado -->
+                    <Info Name="DescDoc" Value="Resoluciones, licencias, permisos, contratos, cartas de venta, etc"/> <!-- descDocumento -->
+                    <Info Name="DetalleDoc" Value="Descripcion de los datos importantes del tipo de documento asociado 2"/> <!-- detalleDocumento -->
+                </Data>
+                <Data Name="OTROS_DOC_RELACIONADOS">
+                    <Info Name="CodigoDocAsociado" Value="3"/> <!-- codDocAsociado -->
+                    <Info Name="NombreMedico" Value="Nombre del medico"/> <!-- medico.nombre -->
+                    <Info Name="Nit" Value="788213212"/> <!-- medico.nit -->
+                    <!-- <Info Name="DocIdentificacion" Value=""/> --> <!-- medico.docIdentificacion -->
+                    <Info Name="TipoServicio" Value="1"/> <!-- tipoServicio -->
+                </Data>
+                
+                <!-- APENDICE -->
+                <Data Name="APENDICE">
+                    <Info Name="DATOS_PROPINA" Data="Descripcion del campo" Value="texto para ingresar las observaciones"/>
+                </Data>
+            </AditionalData>
+            <AditionalInfo>
+                <!-- ventaTercero -->
+                <Info Name="NitTercero" Value="123456789"/> <!-- ventaTercero.nit -->
+                <Info Name="NombreTercero" Value="Nombre del tercero"/> <!-- ventaTercero.nombre -->
+                
+                <!-- extension -->
+                <Info Name="NombreEntrega" Value="Juanito Entrega"/>
+                <Info Name="DocuEntrega" Value="22134444"/>
+                <Info Name="NombreRecibe" Value="Pedrito receptor"/>
+                <Info Name="DocuRecibe" Value="12331222"/>
+                <Info Name="Observaciones" Value="texto para agregar observaciones :o"/>
+                <Info Name="PlacaVehiculo" Value="P012DDA"/>
+            </AditionalInfo>
+        </AdditionalInfo>
+    </AdditionalDocumentInfo>
+</Root>

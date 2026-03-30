@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Template ASMX para PA — Monitoreo (requiere PFX + QR + CUFE) -->
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <CertificaDocumento>
+      <Clave>MON-PA-000000</Clave>
+      <FechaEmision>2026-01-01T00:00:00-05:00</FechaEmision>
+      <Consecutivo>0000000000</Consecutivo>
+      <ADDQR></ADDQR>
+      <CUFE></CUFE>
+    </CertificaDocumento>
+  </soap:Body>
+</soap:Envelope>

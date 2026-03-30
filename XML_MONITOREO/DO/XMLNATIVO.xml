@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ECF>
+    <Encabezado>
+        <Version>1.0</Version>
+        <IdDoc>
+            <TipoeCF>32</TipoeCF>
+            <eNCF>E320000000002</eNCF>
+            <IndicadorEnvioDiferido>1</IndicadorEnvioDiferido>
+            <IndicadorMontoGravado>0</IndicadorMontoGravado>
+            <TipoIngresos>01</TipoIngresos>
+            <TipoPago>1</TipoPago>
+            <TablaFormasPago>
+                <FormaDePago>
+                    <FormaPago>1</FormaPago>
+                    <MontoPago>4.50</MontoPago>
+                </FormaDePago>
+            </TablaFormasPago>
+            <FechaDesde>01-08-2023</FechaDesde>
+            <FechaHasta>31-12-2023</FechaHasta>
+        </IdDoc>
+        <Emisor>
+            <RNCEmisor>12345678901</RNCEmisor>
+            <RazonSocialEmisor>TEST REPUBLICA DOMINICANA</RazonSocialEmisor>
+            <NombreComercial>DIGIFACT SERVICIOS SAS</NombreComercial>
+            <Sucursal>0001</Sucursal>
+            <DireccionEmisor>REPUBLICA DOMINICANA</DireccionEmisor>
+            <Municipio>110200</Municipio>
+            <Provincia>110200</Provincia>
+            <TablaTelefonoEmisor>
+                <TelefonoEmisor>123-456-1234</TelefonoEmisor>
+            </TablaTelefonoEmisor>
+            <CorreoEmisor>digifact@gmail.com</CorreoEmisor>
+            <WebSite>www.Sitioweb_ejemplo.com.gt</WebSite>
+            <ActividadEconomica>Comercio</ActividadEconomica>
+            <CodigoVendedor>1234112</CodigoVendedor>
+            <NumeroPedidoInterno>2899</NumeroPedidoInterno>
+            <FechaEmision>07-12-2023</FechaEmision>
+        </Emisor>
+        <Comprador>
+            <RNCComprador>123456789</RNCComprador>
+            <RazonSocialComprador>Consumidor Final</RazonSocialComprador>
+            <ContactoComprador>12345678</ContactoComprador>
+            <DireccionComprador>Santo Domingo</DireccionComprador>
+            <MunicipioComprador>320000</MunicipioComprador>
+            <ProvinciaComprador>320100</ProvinciaComprador>
+            <FechaEntrega>11-08-2023</FechaEntrega>
+            <ContactoEntrega>OPCIONAL</ContactoEntrega>
+            <DireccionEntrega>OPCIONAL</DireccionEntrega>
+            <TelefonoAdicional>221-221-2378</TelefonoAdicional>
+            <FechaOrdenCompra>11-08-2023</FechaOrdenCompra>
+            <NumeroOrdenCompra>8SS953SS</NumeroOrdenCompra>
+            <CodigoInternoComprador>C0001</CodigoInternoComprador>
+            <InformacionAdicionalComprador>Se debe entregar en Garita No.
+                5</InformacionAdicionalComprador>
+        </Comprador>
+        <Totales>
+            <MontoExento>4.50</MontoExento>
+            <MontoTotal>4.50</MontoTotal>
+        </Totales>
+        <OtraMoneda>
+            <TipoMoneda>USD</TipoMoneda>
+            <TipoCambio>62.0000</TipoCambio>
+            <MontoExentoOtraMoneda>279.00</MontoExentoOtraMoneda>
+            <MontoTotalOtraMoneda>279.00</MontoTotalOtraMoneda>
+        </OtraMoneda>
+    </Encabezado>
+    <DetallesItems>
+        <Item>
+            <NumeroLinea>1</NumeroLinea>
+            <TablaCodigosItem>
+                <CodigosItem>
+                    <TipoCodigo>EAN</TipoCodigo>
+                    <CodigoItem>001</CodigoItem>
+                </CodigosItem>
+                <CodigosItem>
+                    <TipoCodigo>PLU</TipoCodigo>
+                    <CodigoItem>002</CodigoItem>
+                </CodigosItem>
+            </TablaCodigosItem>
+            <IndicadorFacturacion>4</IndicadorFacturacion>
+            <NombreItem>Cafe Capuchino</NombreItem>
+            <IndicadorBienoServicio>1</IndicadorBienoServicio>
+            <CantidadItem>1.00</CantidadItem>
+            <UnidadMedida>43</UnidadMedida>
+            <PrecioUnitarioItem>4.50</PrecioUnitarioItem>
+            <DescuentoMonto>0.00</DescuentoMonto>
+            <TablaSubDescuento>
+                <SubDescuento>
+                    <TipoSubDescuento>$</TipoSubDescuento>
+                    <MontoSubDescuento>0.00</MontoSubDescuento>
+                </SubDescuento>
+                <SubDescuento>
+                    <TipoSubDescuento>$</TipoSubDescuento>
+                    <MontoSubDescuento>0.00</MontoSubDescuento>
+                </SubDescuento>
+            </TablaSubDescuento>
+            <RecargoMonto>0.00</RecargoMonto>
+            <TablaSubRecargo>
+                <SubRecargo>
+                    <TipoSubRecargo>$</TipoSubRecargo>
+                    <MontoSubRecargo>0.00</MontoSubRecargo>
+                </SubRecargo>
+            </TablaSubRecargo>
+            <OtraMonedaDetalle>
+                <PrecioOtraMoneda>279.00</PrecioOtraMoneda>
+                <DescuentoOtraMoneda>0.00</DescuentoOtraMoneda>
+                <RecargoOtraMoneda>0.00</RecargoOtraMoneda>
+                <MontoItemOtraMoneda>279.00</MontoItemOtraMoneda>
+            </OtraMonedaDetalle>
+            <MontoItem>4.50</MontoItem>
+        </Item>
+    </DetallesItems>
+    <FechaHoraFirma>11-12-2023 15:05:49</FechaHoraFirma>
+</ECF>
