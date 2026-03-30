@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Monitoreo PostgreSQL",
+      "Group": "Digifact",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "monitoreo",
+      "Username": "monitoreo",
+      "SSLMode": "prefer"
+    }
+  }
+}

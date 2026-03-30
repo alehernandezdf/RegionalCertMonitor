@@ -6,6 +6,8 @@ Este documento describe el diseño técnico para migrar los 5 servicios de monit
 
 La migración conserva la lógica de negocio probada (certificación ASMX/NUC, medición de tiempos, alertas multicanal) y la moderniza con inyección de dependencias, resiliencia (Polly), logging estructurado (Serilog), tests automatizados (xUnit + FsCheck) y CI/CD (GitHub Actions). El servicio incluye un sistema de control manual de notificaciones que permite activar/desactivar alertas por país y canal (email/WhatsApp) desde SSM Parameter Store sin reiniciar el servicio, con un kill switch global y cooldown configurable para evitar spam.
 
+**Variaciones por país en certificación:** PA y DO requieren firma digital PFX antes de la certificación ASMX. PA adicionalmente requiere generación de QR (ADDQR) y CUFE con JWT (GetJWT). GT usa un token NUC estático almacenado en Secrets Manager en lugar del flujo dinámico de login. Los endpoints NUC varían por país (ej: SV usa `/api/v2/transform/nuc/`, CR usa `/api/cert/xml`). La migración unifica todos los proveedores de email bajo Amazon SES (GT/SV actualmente usan Gmail SMTP, CR/DO usan SES).
+
 ## Arquitectura
 
 ### Diagrama de Arquitectura General
@@ -89,6 +91,8 @@ sequenceDiagram
     participant W as Worker Service
     participant SSM as SSM Parameter Store
     participant SM as Secrets Manager
+    participant PFX as PFX Signing
+    participant QR as QR/CUFE (PA)
     participant NG as NotificationGate
     participant ASMX as Endpoint ASMX
     participant NUC as Endpoint NUC
@@ -97,12 +101,28 @@ sequenceDiagram
     participant CW as CloudWatch
 
     W->>SSM: Cargar configuración por país + flags notificación
-    W->>SM: Cargar credenciales
+    W->>SM: Cargar credenciales + PFX + tokens estáticos
     
     loop Cada intervalo por país (concurrente)
-        W->>ASMX: Certificar documento SOAP
+        alt País requiere PFX (PA, DO)
+            W->>SM: Obtener certificado PFX + contraseña
+            W->>PFX: Firmar XML con PFX
+            PFX-->>W: XML firmado
+        end
+        alt País requiere QR + CUFE (PA)
+            W->>QR: Generar QR (ADDQR) + CUFE + JWT
+            QR-->>W: XML con QR y CUFE
+        end
+        W->>ASMX: Certificar documento SOAP (firmado si aplica)
         ASMX-->>W: Respuesta + tiempo
-        W->>NUC: Login + Certificar documento REST
+        alt NUC Auth Mode = "dynamic" (CR, SV, DO, PA)
+            W->>NUC: Login con credenciales formateadas
+            NUC-->>W: Token JWT dinámico
+        else NUC Auth Mode = "static" (GT)
+            W->>SM: Leer token JWT estático
+            SM-->>W: Token JWT estático
+        end
+        W->>NUC: Certificar documento REST con token
         NUC-->>W: Respuesta + tiempo
         W->>PG: INSERT resultados en monitoring_results
         W->>CW: Log estructurado
@@ -134,7 +154,14 @@ ServicioMonitoreo/
 │   │   │   ├── Certification/
 │   │   │   │   ├── ICertificationService.cs
 │   │   │   │   ├── AsmxCertificationService.cs
-│   │   │   │   └── NucCertificationService.cs
+│   │   │   │   ├── NucCertificationService.cs
+│   │   │   │   ├── IPfxSigningService.cs
+│   │   │   │   ├── PfxSigningService.cs
+│   │   │   │   ├── IQrGenerationService.cs
+│   │   │   │   ├── QrGenerationService.cs
+│   │   │   │   ├── ICufeGenerationService.cs
+│   │   │   │   ├── CufeGenerationService.cs
+│   │   │   │   └── IAsmxPreProcessingPipeline.cs
 │   │   │   ├── Notification/
 │   │   │   │   ├── INotificationService.cs
 │   │   │   │   ├── INotificationGateService.cs
@@ -177,7 +204,9 @@ ServicioMonitoreo/
 │   │   ├── appsettings.SV.json
 │   │   ├── appsettings.DO.json
 │   │   ├── appsettings.CR.json
-│   │   └── appsettings.PA.json
+│   │   ├── appsettings.PA.json
+│   │   ├── appsettings.Secrets.template.json  # Template de credenciales (valores vacíos, se commitea)
+│   │   └── appsettings.Secrets.json           # Credenciales reales (en .gitignore, NO se commitea)
 │   └── Monitoreo.Infrastructure/             # CDK Stack (opcional)
 │       ├── MonitoreoStack.cs
 │       ├── Constructs/
@@ -190,6 +219,9 @@ ServicioMonitoreo/
 │   │   ├── Services/
 │   │   │   ├── AsmxCertificationServiceTests.cs
 │   │   │   ├── NucCertificationServiceTests.cs
+│   │   │   ├── PfxSigningServiceTests.cs
+│   │   │   ├── QrGenerationServiceTests.cs
+│   │   │   ├── CufeGenerationServiceTests.cs
 │   │   │   ├── EmailNotificationServiceTests.cs
 │   │   │   ├── WhatsAppNotificationServiceTests.cs
 │   │   │   ├── NotificationGateServiceTests.cs
@@ -199,7 +231,9 @@ ServicioMonitoreo/
 │   │   │   ├── MonitoringResultPropertyTests.cs
 │   │   │   ├── ConfigurationPropertyTests.cs
 │   │   │   ├── NotificationPropertyTests.cs
-│   │   │   └── NotificationGatePropertyTests.cs
+│   │   │   ├── NotificationGatePropertyTests.cs
+│   │   │   ├── PfxSigningPropertyTests.cs
+│   │   │   └── NucAuthPropertyTests.cs
 │   │   └── Models/
 │   │       └── MonitoringResultTests.cs
 │   └── Monitoreo.Worker.IntegrationTests/
@@ -262,6 +296,49 @@ public interface INotificationGateService
 public record NotificationGateResult(bool IsAllowed, string? SuppressedReason);
 
 public enum NotificationChannel { Email, WhatsApp }
+
+// IPfxSigningService.cs
+public interface IPfxSigningService
+{
+    /// <summary>
+    /// Firma digitalmente un documento XML usando un certificado PFX (PKCS#12).
+    /// Requerido por PA y DO antes de la certificación ASMX.
+    /// </summary>
+    Task<string> SignXmlAsync(string xmlContent, string pfxBase64, string pfxPassword, CancellationToken ct);
+}
+
+// IQrGenerationService.cs
+public interface IQrGenerationService
+{
+    /// <summary>
+    /// Genera un código QR (ADDQR) e inyecta el resultado en el documento XML.
+    /// Requerido únicamente por PA.
+    /// </summary>
+    Task<string> AddQrToXmlAsync(string xmlContent, CountryConfig config, CancellationToken ct);
+}
+
+// ICufeGenerationService.cs
+public interface ICufeGenerationService
+{
+    /// <summary>
+    /// Genera el Código Único de Factura Electrónica (CUFE) y obtiene un JWT (GetJWT).
+    /// Requerido únicamente por PA como parte del pre-procesamiento ASMX.
+    /// </summary>
+    Task<CufeResult> GenerateCufeAsync(string xmlContent, CountryConfig config, CancellationToken ct);
+}
+
+public record CufeResult(string Cufe, string Jwt, string UpdatedXml);
+
+// IAsmxPreProcessingPipeline.cs
+public interface IAsmxPreProcessingPipeline
+{
+    /// <summary>
+    /// Ejecuta el pipeline de pre-procesamiento ASMX según la configuración del país:
+    /// 1. Firma PFX (PA, DO) → 2. Generación QR (PA) → 3. CUFE + JWT (PA)
+    /// Si el país no requiere ningún paso, retorna el XML sin modificar.
+    /// </summary>
+    Task<string> ProcessAsync(string xmlContent, CountryConfig config, CancellationToken ct);
+}
 ```
 
 ### Componente: CountryMonitoringWorker
@@ -309,25 +386,152 @@ public class MonitoringOrchestrator : IMonitoringOrchestrator
 
 ### Componente: AsmxCertificationService
 
-Responsabilidad: Certifica documentos de prueba via SOAP contra endpoints ASMX. Reutiliza los patrones de los repos existentes (Service1.cs) pero con arquitectura limpia.
+Responsabilidad: Certifica documentos de prueba via SOAP contra endpoints ASMX. Reutiliza los patrones de los repos existentes (Service1.cs) pero con arquitectura limpia. Integra el pipeline de pre-procesamiento para países que requieren firma PFX, QR o CUFE.
 
 - Lee la plantilla XML del país desde disco (ruta configurable en `CountryConfig.AsmxTemplatePath`)
 - Modifica campos dinámicos: Clave, FechaEmision, Consecutivo
 - Incrementa el consecutivo de forma atómica usando `Interlocked.Increment`
+- **Ejecuta el pipeline de pre-procesamiento via `IAsmxPreProcessingPipeline`** antes del envío SOAP:
+  - Si `RequiresPfxSignature == true` (PA, DO): firma el XML con el certificado PFX obtenido de Secrets Manager
+  - Si `RequiresQrGeneration == true` (PA): genera el QR (ADDQR) e inyecta en el XML
+  - Si `RequiresCufe == true` (PA): genera el CUFE y obtiene JWT (GetJWT)
+- Si cualquier paso del pipeline falla, retorna un `MonitoringResult` con `ResultStatus=false` sin intentar la certificación ASMX
 - Envía la solicitud SOAP via `HttpClient` (configurado con Polly para retry y circuit breaker)
-- Mide el tiempo de respuesta con `Stopwatch`
+- Mide el tiempo de respuesta con `Stopwatch` (incluye tiempo de pre-procesamiento)
 - Retorna un `MonitoringResult` con el resultado
+
+### Componente: AsmxPreProcessingPipeline
+
+Responsabilidad: Orquesta los pasos de pre-procesamiento del XML antes de la certificación ASMX, según los flags de configuración del país.
+
+```csharp
+public class AsmxPreProcessingPipeline : IAsmxPreProcessingPipeline
+{
+    private readonly IPfxSigningService _pfxSigning;
+    private readonly IQrGenerationService _qrGeneration;
+    private readonly ICufeGenerationService _cufeGeneration;
+    private readonly IAmazonSecretsManager _secretsManager;
+    private readonly ILogger<AsmxPreProcessingPipeline> _logger;
+
+    public async Task<string> ProcessAsync(string xmlContent, CountryConfig config, CancellationToken ct)
+    {
+        var xml = xmlContent;
+
+        // Paso 1: Firma PFX (PA, DO)
+        if (config.RequiresPfxSignature)
+        {
+            var pfxBase64 = await GetSecretAsync(config.PfxSecretArn!, ct);
+            var pfxPassword = await GetSecretAsync(config.PfxPasswordSecretArn!, ct);
+            xml = await _pfxSigning.SignXmlAsync(xml, pfxBase64, pfxPassword, ct);
+        }
+
+        // Paso 2: Generación QR (PA)
+        if (config.RequiresQrGeneration)
+        {
+            xml = await _qrGeneration.AddQrToXmlAsync(xml, config, ct);
+        }
+
+        // Paso 3: CUFE + JWT (PA)
+        if (config.RequiresCufe)
+        {
+            var cufeResult = await _cufeGeneration.GenerateCufeAsync(xml, config, ct);
+            xml = cufeResult.UpdatedXml;
+        }
+
+        return xml;
+    }
+}
+```
+
+Pipeline por país:
+| País | Firma PFX | QR (ADDQR) | CUFE + JWT | Pipeline |
+|------|-----------|------------|------------|----------|
+| GT   | ❌        | ❌         | ❌         | Sin pre-procesamiento |
+| SV   | ❌        | ❌         | ❌         | Sin pre-procesamiento |
+| CR   | ❌        | ❌         | ❌         | Sin pre-procesamiento |
+| DO   | ✅        | ❌         | ❌         | PFX → SOAP |
+| PA   | ✅        | ✅         | ✅         | PFX → QR → CUFE/JWT → SOAP |
+
+### Componente: PfxSigningService
+
+Responsabilidad: Firma digitalmente documentos XML usando certificados PFX (PKCS#12). Requerido por PA y DO.
+
+- Recibe el XML, el certificado PFX en base64 y la contraseña
+- Usa `System.Security.Cryptography.X509Certificates.X509Certificate2` para cargar el PFX
+- Firma el XML usando `System.Security.Cryptography.Xml.SignedXml`
+- Retorna el XML firmado con el elemento `<Signature>` incluido
+
+### Componente: QrGenerationService
+
+Responsabilidad: Genera códigos QR (ADDQR) para inyectar en documentos XML. Requerido únicamente por PA.
+
+- Genera el contenido del QR según la configuración de `CountryConfig.QrCode`
+- Inyecta el resultado en el nodo correspondiente del XML
+- Retorna el XML actualizado con el QR
+
+### Componente: CufeGenerationService
+
+Responsabilidad: Genera el Código Único de Factura Electrónica (CUFE) y obtiene un JWT via GetJWT. Requerido únicamente por PA.
+
+- Calcula el CUFE basado en los datos del documento
+- Obtiene un JWT via llamada HTTP a GetJWT (configurado con Polly)
+- Retorna el CUFE, JWT y el XML actualizado
 
 ### Componente: NucCertificationService
 
-Responsabilidad: Certifica documentos de prueba via API REST NUC. Reutiliza los patrones de los repos existentes.
+Responsabilidad: Certifica documentos de prueba via API REST NUC. Reutiliza los patrones de los repos existentes. Soporta dos modos de autenticación según `CountryConfig.NucAuthMode`.
 
-- Obtiene token de autenticación via POST al endpoint de login NUC
+- **Modo dinámico** (`NucAuthMode == "dynamic"`, usado por CR, SV, DO, PA):
+  - Construye el username usando `NucUsernameFormat` con interpolación de variables (`{Country}`, `{TaxId}`, `{NucUsername}`, `{NRC}`, `{NIT}`)
+  - Obtiene token de autenticación via POST al endpoint de login NUC con las credenciales formateadas
+- **Modo estático** (`NucAuthMode == "static"`, usado por GT):
+  - Obtiene el token JWT estático desde Secrets Manager (path: `/monitoreo/{ambiente}/{pais}/nuc-static-token`)
+  - No ejecuta el flujo de login
 - Prepara la plantilla XML NUC con campos dinámicos actualizados (IssuedDateTime, Consecutivo)
-- Envía POST al endpoint de certificación con el token en el header Authorization
+- Envía POST al endpoint de certificación (`NucCertEndpoint`, que varía por país) con el token en el header Authorization
 - Parsea la respuesta JSON (code, message, description, infoDetails)
-- Mide el tiempo de respuesta total (login + certificación)
+- Mide el tiempo de respuesta total (login/lectura de token + certificación)
 - Retorna un `MonitoringResult`
+
+```csharp
+public class NucCertificationService : ICertificationService
+{
+    public CertificationType Type => CertificationType.NUC;
+
+    public async Task<MonitoringResult> CertifyAsync(CountryConfig config, CancellationToken ct)
+    {
+        var sw = Stopwatch.StartNew();
+        
+        // Obtener token según modo de autenticación
+        string token = config.NucAuthMode switch
+        {
+            "static" => await GetStaticTokenAsync(config, ct),
+            "dynamic" => await LoginAndGetTokenAsync(config, ct),
+            _ => throw new InvalidOperationException($"NucAuthMode inválido: {config.NucAuthMode}")
+        };
+
+        // Preparar XML y certificar
+        var xml = PrepareNucXml(config);
+        var response = await CertifyWithTokenAsync(config.NucCertEndpoint, token, xml, ct);
+        
+        sw.Stop();
+        return BuildResult(config, sw.ElapsedMilliseconds, response);
+    }
+
+    private string BuildNucUsername(CountryConfig config)
+    {
+        // Interpola NucUsernameFormat con los valores del país
+        // Ej: "{Country}.{TaxId}.{NucUsername}" → "CR.123456789.usuario"
+        // Ej: "SV.{NRC}.{NIT}" → "SV.12345.67890"
+        return config.NucUsernameFormat
+            .Replace("{Country}", config.CountryCode)
+            .Replace("{TaxId}", config.TaxId)
+            .Replace("{NucUsername}", config.NucUsername)
+            .Replace("{NRC}", config.TaxId)   // NRC mapea a TaxId para SV
+            .Replace("{NIT}", config.TaxId);  // NIT mapea a TaxId
+    }
+}
+```
 
 ### Componente: PostgresMonitoringRepository
 
@@ -363,7 +567,9 @@ Responsabilidad: Carga configuración desde SSM Parameter Store y Secrets Manage
 - Lee parámetros de SSM con jerarquía `/monitoreo/{ambiente}/{pais}/`
 - Lee secretos de Secrets Manager para credenciales sensibles
 - Lee flags de notificación desde SSM (global y por país)
-- Para desarrollo local, soporta fallback a `appsettings.{PAIS}.json`
+- Para desarrollo local, soporta fallback a `appsettings.{PAIS}.json` para configuración no sensible (endpoints, intervalos, umbrales)
+- Para credenciales en desarrollo local, soporta fallback a `appsettings.Secrets.json` cuando Secrets Manager no está disponible y el ambiente es Development
+- Prioridad de carga de credenciales: (1) Secrets Manager, (2) `appsettings.Secrets.json` si ambiente es Development, (3) error descriptivo
 - Valida que todos los campos obligatorios estén presentes
 - Retorna `CountryConfig` validados o registra errores descriptivos sin exponer credenciales
 
@@ -445,14 +651,47 @@ classDiagram
     
     class AsmxCertificationService {
         -HttpClient httpClient
+        -IAsmxPreProcessingPipeline pipeline
         -int sequentialCounter
         +CertifyAsync(CountryConfig, CancellationToken) MonitoringResult
     }
     
+    class IAsmxPreProcessingPipeline {
+        <<interface>>
+        +ProcessAsync(string, CountryConfig, CancellationToken) string
+    }
+    
+    class AsmxPreProcessingPipeline {
+        -IPfxSigningService pfxSigning
+        -IQrGenerationService qrGeneration
+        -ICufeGenerationService cufeGeneration
+        -IAmazonSecretsManager secretsManager
+        +ProcessAsync(string, CountryConfig, CancellationToken) string
+    }
+    
+    class IPfxSigningService {
+        <<interface>>
+        +SignXmlAsync(string, string, string, CancellationToken) string
+    }
+    
+    class IQrGenerationService {
+        <<interface>>
+        +AddQrToXmlAsync(string, CountryConfig, CancellationToken) string
+    }
+    
+    class ICufeGenerationService {
+        <<interface>>
+        +GenerateCufeAsync(string, CountryConfig, CancellationToken) CufeResult
+    }
+    
     class NucCertificationService {
         -HttpClient httpClient
+        -IAmazonSecretsManager secretsManager
         -int sequentialCounter
         +CertifyAsync(CountryConfig, CancellationToken) MonitoringResult
+        -BuildNucUsername(CountryConfig) string
+        -GetStaticTokenAsync(CountryConfig, CancellationToken) string
+        -LoginAndGetTokenAsync(CountryConfig, CancellationToken) string
     }
     
     class IMonitoringRepository {
@@ -506,11 +745,27 @@ classDiagram
         +double AlertThresholdMs
         +string AsmxEndpoint
         +string NucCertEndpoint
+        +string TaxId
+        +string Requestor
+        +string NucUsername
+        +string NucAuthMode
+        +string NucUsernameFormat
+        +bool RequiresPfxSignature
+        +string? PfxSecretArn
+        +string? PfxPasswordSecretArn
+        +bool RequiresQrGeneration
+        +bool RequiresCufe
         +bool NotificationsEmailEnabled
         +bool NotificationsWhatsAppEnabled
         +int NotificationCooldownMinutes
         +IReadOnlyList~string~ EmailRecipients
         +IReadOnlyList~string~ WhatsAppNumbers
+    }
+    
+    class CufeResult {
+        +string Cufe
+        +string Jwt
+        +string UpdatedXml
     }
     
     CountryMonitoringWorker --> MonitoringOrchestrator
@@ -520,6 +775,11 @@ classDiagram
     MonitoringOrchestrator --> INotificationGateService
     NotificationGateService ..|> INotificationGateService
     AsmxCertificationService ..|> ICertificationService
+    AsmxCertificationService --> IAsmxPreProcessingPipeline
+    AsmxPreProcessingPipeline ..|> IAsmxPreProcessingPipeline
+    AsmxPreProcessingPipeline --> IPfxSigningService
+    AsmxPreProcessingPipeline --> IQrGenerationService
+    AsmxPreProcessingPipeline --> ICufeGenerationService
     NucCertificationService ..|> ICertificationService
     PostgresMonitoringRepository ..|> IMonitoringRepository
     ICertificationService --> MonitoringResult
@@ -527,6 +787,7 @@ classDiagram
     INotificationService --> NotificationPayload
     INotificationGateService --> CountryConfig
     NotificationPayload --> MonitoringResult
+    ICufeGenerationService --> CufeResult
 ```
 
 ## Modelos de Datos
@@ -559,16 +820,35 @@ public record CountryConfig
     public required string CountryCode { get; init; }       // "GT", "SV", etc.
     public required bool Enabled { get; init; }             // País habilitado/deshabilitado
     public required TimeSpan MonitoringInterval { get; init; } // Intervalo entre ciclos
-    public required double AlertThresholdMs { get; init; }  // Umbral de alerta en ms (default: 5000)
+    public required double AlertThresholdMs { get; init; }  // Umbral de alerta en ms (CR/DO: 5000, GT/PA: 10000)
     
     // Endpoints
     public required string AsmxEndpoint { get; init; }      // URL endpoint ASMX
     public required string NucLoginEndpoint { get; init; }   // URL login NUC
-    public required string NucCertEndpoint { get; init; }    // URL certificación NUC
+    public required string NucCertEndpoint { get; init; }    // URL certificación NUC (varía por país)
     
     // Templates
     public required string AsmxTemplatePath { get; init; }   // Ruta plantilla XML ASMX
     public required string NucTemplatePath { get; init; }    // Ruta plantilla XML NUC
+    
+    // Campos específicos del país (Req 9.3)
+    public required string TaxId { get; init; }              // NIT/RUC/Cédula del emisor de prueba
+    public required string Requestor { get; init; }          // GUID del requestor ASMX
+    public required string NucUsername { get; init; }        // Username para login NUC
+    
+    // Autenticación NUC (Req 9.4, 9.5)
+    public required string NucAuthMode { get; init; }        // "dynamic" o "static"
+    public required string NucUsernameFormat { get; init; }  // Ej: "{Country}.{TaxId}.{NucUsername}" (CR), "SV.{NRC}.{NIT}" (SV)
+    
+    // Firma Digital PFX - Opcional (Req 9.6, solo PA y DO)
+    public bool RequiresPfxSignature { get; init; } = false;          // true para PA, DO
+    public string? PfxSecretArn { get; init; }                        // ARN del secreto con PFX base64
+    public string? PfxPasswordSecretArn { get; init; }                // ARN del secreto con contraseña PFX
+    
+    // QR y CUFE - Opcional (Req 9.7, solo PA)
+    public bool RequiresQrGeneration { get; init; } = false;          // true solo para PA
+    public string? QrCode { get; init; }                              // Configuración QR (solo PA)
+    public bool RequiresCufe { get; init; } = false;                  // true solo para PA (CUFE + JWT)
     
     // Notificaciones - Destinatarios
     public required IReadOnlyList<string> EmailRecipients { get; init; }
@@ -584,6 +864,16 @@ public record CountryConfig
     public required string WhatsAppTokenSecretArn { get; init; }
 }
 ```
+
+Configuración por país conocida (Req 9.9):
+
+| País | AlertThresholdMs | NucAuthMode | RequiresPfxSignature | RequiresQrGeneration | RequiresCufe | NucUsernameFormat |
+|------|-----------------|-------------|---------------------|---------------------|-------------|-------------------|
+| GT   | 10000           | static      | ❌                  | ❌                  | ❌          | N/A (token estático) |
+| SV   | 5000            | dynamic     | ❌                  | ❌                  | ❌          | `SV.{NRC}.{NIT}` |
+| CR   | 5000            | dynamic     | ❌                  | ❌                  | ❌          | `{Country}.{TaxId}.{NucUsername}` |
+| DO   | 5000            | dynamic     | ✅                  | ❌                  | ❌          | `{Country}.{TaxId}.{NucUsername}` |
+| PA   | 10000           | dynamic     | ✅                  | ✅                  | ✅          | `{Country}.{TaxId}.{NucUsername}` |
 
 ### NotificationPayload
 
@@ -677,7 +967,7 @@ Jerarquía de parámetros en SSM:
     monitoring-interval-minutes     = "5"
     asmx-endpoint                   = "https://..."
     nuc-login-endpoint              = "https://..."
-    nuc-cert-endpoint               = "https://..."
+    nuc-cert-endpoint               = "https://..."       # Varía por país (SV: /api/v2/transform/nuc/, CR: /api/cert/xml)
     asmx-template-path              = "Templates/GT/asmx-template.xml"
     nuc-template-path               = "Templates/GT/nuc-template.xml"
     email-recipients                = "ops@digifact.com,alerts@digifact.com"
@@ -685,6 +975,20 @@ Jerarquía de parámetros en SSM:
     notifications-email-enabled     = "true"          # Toggle email por país
     notifications-whatsapp-enabled  = "true"          # Toggle WhatsApp por país
     notification-cooldown-minutes   = "15"            # Cooldown entre notificaciones mismo tipo/país
+    # Campos nuevos obligatorios (Req 9.3, 9.4, 9.5)
+    tax-id                          = "123456789"     # NIT/RUC/Cédula del emisor de prueba
+    requestor                       = "GUID-..."      # GUID del requestor ASMX
+    nuc-username                    = "usuario"        # Username para login NUC
+    nuc-auth-mode                   = "dynamic"        # "dynamic" o "static"
+    nuc-username-format             = "{Country}.{TaxId}.{NucUsername}"  # Formato de credenciales NUC
+    # Campos opcionales - Firma PFX (Req 9.6, solo PA y DO)
+    pfx-secret-arn                  = "arn:aws:..."    # ARN del secreto con PFX base64 (solo PA, DO)
+    pfx-password-secret-arn         = "arn:aws:..."    # ARN del secreto con contraseña PFX (solo PA, DO)
+    requires-pfx-signature          = "false"          # true para PA, DO
+    # Campos opcionales - QR y CUFE (Req 9.7, solo PA)
+    requires-qr-generation          = "false"          # true solo para PA
+    qr-code                         = "..."            # Configuración QR (solo PA)
+    requires-cufe                   = "false"          # true solo para PA
 ```
 
 ### Esquema Secrets Manager
@@ -693,6 +997,17 @@ Jerarquía de parámetros en SSM:
 /monitoreo/{ambiente}/{pais}/nuc-credentials
     {
         "username": "...",
+        "password": "..."
+    }
+
+/monitoreo/{ambiente}/{pais}/nuc-static-token          # Solo GT (Token_Estático_NUC)
+    {
+        "token": "eyJhbGciOiJIUzI1NiIs..."
+    }
+
+/monitoreo/{ambiente}/{pais}/pfx-certificate            # Solo PA, DO (Firma_Digital_PFX)
+    {
+        "pfx_base64": "MIIKYQIBAzCCCi...",
         "password": "..."
     }
 
@@ -712,6 +1027,52 @@ Jerarquía de parámetros en SSM:
     {
         "connection_string": "Host=...;Database=monitoring;Username=...;Password=..."
     }
+```
+
+### Archivo Local de Credenciales (appsettings.Secrets.json)
+
+Archivo para desarrollo local que reemplaza Secrets Manager. Incluido en `.gitignore`. Se provee `appsettings.Secrets.template.json` con la estructura y valores vacíos como referencia.
+
+```json
+{
+  "Secrets": {
+    "GT": {
+      "NucCredentials": { "username": "", "password": "" },
+      "NucStaticToken": "",
+      "WhatsAppToken": "",
+      "WhatsAppPhoneNumberId": ""
+    },
+    "SV": {
+      "NucCredentials": { "username": "", "password": "" },
+      "WhatsAppToken": "",
+      "WhatsAppPhoneNumberId": ""
+    },
+    "CR": {
+      "NucCredentials": { "username": "", "password": "" },
+      "WhatsAppToken": "",
+      "WhatsAppPhoneNumberId": ""
+    },
+    "DO": {
+      "NucCredentials": { "username": "", "password": "" },
+      "PfxCertificateBase64": "",
+      "PfxPassword": "",
+      "WhatsAppToken": "",
+      "WhatsAppPhoneNumberId": ""
+    },
+    "PA": {
+      "NucCredentials": { "username": "", "password": "" },
+      "PfxCertificateBase64": "",
+      "PfxPassword": "",
+      "WhatsAppToken": "",
+      "WhatsAppPhoneNumberId": ""
+    },
+    "Global": {
+      "PostgresConnectionString": "Host=localhost;Database=monitoring;Username=monitoreo;Password=changeme",
+      "SesRegion": "us-east-1",
+      "SesSenderEmail": "monitoreo@digifact.com"
+    }
+  }
+}
 ```
 
 ### Docker Compose
@@ -826,9 +1187,9 @@ volumes:
 
 ### Propiedad 10: Validación de CountryConfig
 
-*Para cualquier* `CountryConfig`, la validación debe pasar si y solo si todos los campos obligatorios (CountryCode, AsmxEndpoint, NucLoginEndpoint, NucCertEndpoint, MonitoringInterval > 0, AlertThresholdMs > 0, AsmxTemplatePath, NucTemplatePath, al menos un EmailRecipient, al menos un WhatsAppNumber, NotificationCooldownMinutes >= 0) están presentes y son válidos. Si algún campo obligatorio falta o es inválido, la validación debe fallar con un mensaje descriptivo que identifique el campo faltante.
+*Para cualquier* `CountryConfig`, la validación debe pasar si y solo si todos los campos obligatorios (CountryCode, AsmxEndpoint, NucLoginEndpoint, NucCertEndpoint, MonitoringInterval > 0, AlertThresholdMs > 0, AsmxTemplatePath, NucTemplatePath, al menos un EmailRecipient, al menos un WhatsAppNumber, NotificationCooldownMinutes >= 0, TaxId no-vacío, Requestor no-vacío, NucUsername no-vacío, NucAuthMode ∈ {"dynamic", "static"}, NucUsernameFormat no-vacío) están presentes y son válidos. Adicionalmente, si `RequiresPfxSignature == true` entonces `PfxSecretArn` y `PfxPasswordSecretArn` deben ser no-nulos y no-vacíos. Si algún campo obligatorio falta o es inválido, la validación debe fallar con un mensaje descriptivo que identifique el campo faltante.
 
-**Valida: Requerimientos 8.3, 8.4 (Configuración Multi-País), 7.1**
+**Valida: Requerimientos 8.3, 8.4 (Configuración Multi-País), 7.1, 9.3, 9.4, 9.5, 9.6**
 
 ### Propiedad 11: Completitud de logs estructurados
 
@@ -854,6 +1215,24 @@ volumes:
 
 **Valida: Requerimientos 7.2, 7.3**
 
+### Propiedad 15: Firma PFX produce XML firmado válido
+
+*Para cualquier* documento XML válido y cualquier certificado PFX válido con su contraseña, firmar el XML con `IPfxSigningService.SignXmlAsync` debe producir un documento XML que: (1) contiene un elemento `<Signature>` válido según el estándar XML-DSig, (2) preserva el contenido original del documento sin modificaciones fuera del bloque de firma, y (3) el XML resultante es parseable como documento XML bien formado.
+
+**Valida: Requerimientos 2.6, 14.6**
+
+### Propiedad 16: Pipeline de pre-procesamiento aplica pasos correctos según configuración
+
+*Para cualquier* `CountryConfig` y cualquier documento XML válido, el `IAsmxPreProcessingPipeline.ProcessAsync` debe ejecutar exactamente los pasos indicados por los flags de configuración: si `RequiresPfxSignature == true` el XML debe ser firmado, si `RequiresQrGeneration == true` el XML debe contener el nodo QR, si `RequiresCufe == true` el XML debe contener el CUFE. Si ningún flag está activo, el XML de salida debe ser idéntico al de entrada. Los pasos deben ejecutarse en orden: PFX → QR → CUFE.
+
+**Valida: Requerimientos 2.6, 2.7, 2.8**
+
+### Propiedad 17: Modo de autenticación NUC determina estrategia de obtención de token
+
+*Para cualquier* `CountryConfig`, si `NucAuthMode == "dynamic"` entonces `BuildNucUsername` debe producir un string completamente interpolado sin placeholders residuales (`{Country}`, `{TaxId}`, `{NucUsername}`, `{NRC}`, `{NIT}`) y el flujo debe ejecutar login HTTP; si `NucAuthMode == "static"` entonces el token debe obtenerse de Secrets Manager sin ejecutar login. Para cualquier `NucUsernameFormat` con N placeholders y un `CountryConfig` con valores no-vacíos para cada placeholder, el resultado de `BuildNucUsername` debe tener longitud mayor a 0 y no contener llaves `{` ni `}`.
+
+**Valida: Requerimientos 3.1, 3.2, 9.4, 9.5, 14.7**
+
 ## Manejo de Errores
 
 ### Estrategia General
@@ -872,6 +1251,10 @@ El servicio sigue el principio de "fallar parcialmente, nunca completamente": un
 | XML de respuesta inválido | No retry | `MonitoringResult` con `ResultStatus=false` y detalle del error de parsing |
 | Token NUC expirado/inválido | Retry una vez con nuevo token | Si falla de nuevo → `MonitoringResult` con `ResultStatus=false` |
 | Circuit breaker abierto | No intenta la llamada | `MonitoringResult` con `ResultStatus=false` y mensaje "Circuit breaker open for {endpoint}" |
+| Firma PFX falla (certificado inválido, contraseña incorrecta) | No retry (error de configuración) | `MonitoringResult` con `ResultStatus=false`, no se intenta certificación ASMX |
+| Generación QR falla | No retry | `MonitoringResult` con `ResultStatus=false`, no se intenta certificación ASMX |
+| Generación CUFE/JWT falla | No retry | `MonitoringResult` con `ResultStatus=false`, no se intenta certificación ASMX |
+| Secreto PFX no encontrado en Secrets Manager | No retry (error de configuración) | `MonitoringResult` con `ResultStatus=false`, log Error sin exponer ARN |
 
 Configuración de Circuit Breaker por endpoint:
 - Umbral de apertura: 5 fallos consecutivos (configurable)
@@ -916,7 +1299,7 @@ El NotificationGate sigue una política "fail-open": si no puede determinar el e
 | Error | Estrategia | Resultado |
 |-------|-----------|-----------|
 | SSM no disponible al inicio | Retry con backoff (5 intentos) | Si agota retries → fallback a appsettings.json local |
-| Secrets Manager no disponible | Retry con backoff (5 intentos) | Si agota retries → log Critical, país deshabilitado |
+| Secrets Manager no disponible | Retry con backoff (5 intentos) | Si agota retries y ambiente es Development → fallback a `appsettings.Secrets.json`; si producción → log Critical, país deshabilitado |
 | Parámetro SSM faltante | No retry | Log Error descriptivo, país deshabilitado |
 | Secreto faltante | No retry | Log Error descriptivo (sin exponer el nombre del secreto esperado), país deshabilitado |
 | Credencial inválida/expirada | Detectado en runtime | Log Error, notificación al equipo de ops |
@@ -1014,8 +1397,11 @@ Ambos son necesarios: los tests unitarios atrapan bugs concretos y validan integ
 ### Tests Unitarios (xUnit + Moq)
 
 #### Servicios de Certificación
-- `AsmxCertificationServiceTests`: Mock de `HttpClient` para simular respuestas SOAP exitosas y fallidas, verificar construcción correcta del XML, medición de tiempo
-- `NucCertificationServiceTests`: Mock de `HttpClient` para simular login + certificación, verificar manejo de token, parsing de respuesta JSON
+- `AsmxCertificationServiceTests`: Mock de `HttpClient` para simular respuestas SOAP exitosas y fallidas, verificar construcción correcta del XML, medición de tiempo, integración con `IAsmxPreProcessingPipeline`
+- `NucCertificationServiceTests`: Mock de `HttpClient` para simular login + certificación, verificar manejo de token, parsing de respuesta JSON, verificar ambos modos de autenticación (dynamic/static)
+- `PfxSigningServiceTests`: Verificar firma digital con certificado PFX de prueba, validar que el XML firmado contiene elemento `<Signature>`, verificar error cuando PFX es inválido o contraseña incorrecta
+- `QrGenerationServiceTests`: Verificar generación de QR e inyección en XML, validar que el nodo QR se agrega correctamente
+- `CufeGenerationServiceTests`: Verificar generación de CUFE y obtención de JWT, validar que el XML se actualiza con el CUFE
 
 #### Servicios de Notificación
 - `EmailNotificationServiceTests`: Mock de `AmazonSimpleEmailServiceV2Client`, verificar que se envía a todos los destinatarios, contenido del email
@@ -1081,6 +1467,17 @@ public class MonitoringArbitraries
          from emailEnabled in Arb.Generate<bool>()
          from whatsappEnabled in Arb.Generate<bool>()
          from cooldownMin in Gen.Choose(0, 60)
+         from taxId in Arb.Generate<NonEmptyString>()
+         from requestor in Arb.Generate<NonEmptyString>()
+         from nucUsername in Arb.Generate<NonEmptyString>()
+         from nucAuthMode in Gen.Elements("dynamic", "static")
+         from nucUsernameFormat in Gen.Elements(
+             "{Country}.{TaxId}.{NucUsername}",
+             "SV.{NRC}.{NIT}",
+             "{Country}.{TaxId}")
+         from requiresPfx in Arb.Generate<bool>()
+         from requiresQr in Arb.Generate<bool>()
+         from requiresCufe in Arb.Generate<bool>()
          select new CountryConfig
          {
              CountryCode = country,
@@ -1097,6 +1494,16 @@ public class MonitoringArbitraries
              NotificationsEmailEnabled = emailEnabled,
              NotificationsWhatsAppEnabled = whatsappEnabled,
              NotificationCooldownMinutes = cooldownMin,
+             TaxId = taxId.Get,
+             Requestor = requestor.Get,
+             NucUsername = nucUsername.Get,
+             NucAuthMode = nucAuthMode,
+             NucUsernameFormat = nucUsernameFormat,
+             RequiresPfxSignature = requiresPfx,
+             PfxSecretArn = requiresPfx ? "arn:aws:secretsmanager:us-east-1:123456:secret:pfx" : null,
+             PfxPasswordSecretArn = requiresPfx ? "arn:aws:secretsmanager:us-east-1:123456:secret:pfx-pwd" : null,
+             RequiresQrGeneration = requiresQr,
+             RequiresCufe = requiresCufe,
              NucCredentialSecretArn = "arn:aws:secretsmanager:us-east-1:123456:secret:test",
              WhatsAppTokenSecretArn = "arn:aws:secretsmanager:us-east-1:123456:secret:test"
          }).ToArbitrary();
@@ -1121,6 +1528,9 @@ public class MonitoringArbitraries
 | 12: Retención datos | `RetentionPropertyTests.cs` | Feature: unified-monitoring-service, Property 12: Correctitud de retención de datos |
 | 13: Cooldown notificaciones | `NotificationGatePropertyTests.cs` | Feature: unified-monitoring-service, Property 13: Cooldown de notificaciones previene spam |
 | 14: Monitoreo independiente de flags | `NotificationGatePropertyTests.cs` | Feature: unified-monitoring-service, Property 14: Monitoreo continúa independiente de flags de notificación |
+| 15: Firma PFX produce XML firmado válido | `PfxSigningPropertyTests.cs` | Feature: unified-monitoring-service, Property 15: Firma PFX produce XML firmado válido |
+| 16: Pipeline pre-procesamiento por config | `PfxSigningPropertyTests.cs` | Feature: unified-monitoring-service, Property 16: Pipeline de pre-procesamiento aplica pasos correctos según configuración |
+| 17: NUC auth mode determina estrategia | `NucAuthPropertyTests.cs` | Feature: unified-monitoring-service, Property 17: Modo de autenticación NUC determina estrategia de obtención de token |
 
 Cada property test debe implementarse como un ÚNICO test con el atributo `[Property(MaxTest = 100)]` de FsCheck.Xunit, referenciando la propiedad del diseño en un comentario:
 

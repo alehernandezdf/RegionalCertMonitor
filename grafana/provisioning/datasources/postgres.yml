@@ -1,0 +1,16 @@
+apiVersion: 1
+datasources:
+  - name: PostgreSQL
+    type: grafana-postgresql-datasource
+    uid: monitoreo-pg
+    access: proxy
+    url: postgres:5432
+    database: monitoreo
+    user: monitoreo
+    secureJsonData:
+      password: monitoreo_dev
+    jsonData:
+      sslmode: disable
+      postgresVersion: 1600
+    isDefault: true
+    editable: true

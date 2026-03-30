@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Root>
+    <Version>4.4</Version>
+    <!-- 1. Version -->
+    <CountryCode>CR</CountryCode>
+    <!-- -->
+    <Header>
+        <DocType>01</DocType> <!--Tipo de documento-->
+        <IssuedDateTime>2025-07-21T21:40:00-06:00</IssuedDateTime>
+        <AdditionalIssueType>2</AdditionalIssueType>
+        <ExchangeRate>1.00</ExchangeRate>
+        <Currency>CRC</Currency>
+        <AdditionalIssueDocInfo>
+            <Info Name="CodigoActividad" Value="6202.0"/>
+            <Info Name="CondicionVenta" Value="01"/>
+            <Info Name="PlazoCredito" Value="6"/>
+            <Info Name="CodigoPais" Value="506"/> <!--Info para clave de documento-->
+            <Info Name="Consecutivo" Value="0000000028"/>
+            <Info Name="SituacionComprobante" Value="1"/> <!--Puede que lo ponga el usuario o nosotros. (1 normal, 2 contingencia, 3 sin internet)-->
+            <Info Name="CodigoSeguridad" Value="00000001"/> <!--Codigo de seguridad del cliente o Digifact. Random o custom del cliente-->
+        </AdditionalIssueDocInfo> 
+    </Header>
+    <Seller>
+        <TaxID>3123456789</TaxID>
+        <TaxIDType>02</TaxIDType>
+        <Name>MONITOREO SOCIEDAD DE RESPONSABILIDAD LIMITADA</Name>
+        <Contact>
+            <PhoneList>
+                <Phone>64206205</Phone>
+            </PhoneList>
+            <EmailList>
+                <Email>julio.cifuentes@digifact.com</Email>
+            </EmailList>
+        </Contact>
+        <AdditionlInfo > <!-- Name="" Id="" -->
+            <Info Name="Provincia" Data="" Value="1"/> <!--Length de 1-->
+            <Info Name="Canton" Data="" Value="02"/> <!-- Length de 2 -->
+            <Info Name="Distrito" Data="" Value="03"/><!-- Length de 2 -->
+            <!--Info Name="Barrio" Data="" Value=""/--><!-- Length de 2 -->
+            <Info Name="CodigoPais" Data="" Value="506"/> <!--Codigo del pais, pero del numero de telefono-->
+        </AdditionlInfo>
+        <AddressInfo>
+            <Address>Escazú San Rafael Centro Comercial Distrito Cuatro Tercer piso oficina Lawgical</Address><!--OtrasSenas-->
+        </AddressInfo>
+        <BranchInfo>
+            <Code>000</Code>  <!--Sucursal-->
+            <Name>DIGIFACT</Name> <!--NombreComercial-->
+            <AdditionalBranchInfo>
+                <Info Name="Caja" Value="00009"/> <!--Codigo de Terminal o punto de venta-->
+            </AdditionalBranchInfo>
+        </BranchInfo>
+    </Seller>
+    
+    <Buyer>
+        <TaxID>702320717</TaxID>
+        <TaxIDType>01</TaxIDType>
+        <!--<TaxIDAdditionalInfo></TaxIDAdditionalInfo> Identificacion de extranjero string de max 80 Length-->
+        <Name>Walner Steven Borbon Jimenez</Name>
+        <BranchInfo>
+            <Code>00001</Code>
+            <Name>Nombre comercial de walner</Name>
+        </BranchInfo>
+    </Buyer>
+    <Items>
+        <Item>
+            <Codes>
+                <Code Name="Codigo" Data="" Value="9615000000000"/>
+            </Codes>
+            <Description>M&amp;M &gt; &lt; &apos; PEANUT</Description> <!--Detalle del producto -->
+            <Qty>1.00</Qty>
+            <UnitOfMeasure>Unid</UnitOfMeasure>
+            <Price>1769.91</Price>
+            <Taxes>
+                <Tax>
+                    <Code>01</Code> <!--Codigo-->
+                    <Description>08</Description>  <!--CodigoTarifa-->
+                    <Rate>13.00000</Rate> <!--Tarifa-->  <!--Rate>1.05800</Rate-->  <!--FactorIVA-->
+                    <Amount>230.09</Amount>
+                </Tax>
+            </Taxes>
+            <Totals>
+                <TotalBDiscount>1769.91</TotalBDiscount> <!--MontoTotal-->
+                <TotalWDiscount>1769.91</TotalWDiscount> <!--SubTotal-->
+                <SpecificTotal>230.09</SpecificTotal> <!--ImpuestoNeto-->
+                <TotalItem>2000.00</TotalItem> <!--MontoLinea-->
+            </Totals>
+            <AdditionalInfo>
+                <Info Name="TipoTransacciona" Value="01"/>
+                <Info Name="BaseImponible" Value="1769.91"/>
+                <Info Name="ImpuestoAsumidoEmisorFabrica" Value="0.00"/>
+            </AdditionalInfo>
+        </Item>
+        <Item>
+            <Codes>
+                <Code Name="Codigo" Data="" Value="9615000000000"/>
+            </Codes>
+            <Description>ADULTO</Description> <!--Detalle del producto -->
+            <Qty>1.00</Qty>
+            <UnitOfMeasure>Unid</UnitOfMeasure>
+            <Price>1769.91</Price>
+            <Taxes>
+                <Tax>
+                    <Code>01</Code> <!--Codigo-->
+                    <Description>08</Description>  <!--CodigoTarifa-->
+                    <Rate>13.00000</Rate> <!--Tarifa-->  <!--Rate>1.05800</Rate-->  <!--FactorIVA-->
+                    <Amount>230.09</Amount>
+                </Tax>
+            </Taxes>
+            <Totals>
+                <TotalBDiscount>1769.91</TotalBDiscount> <!--MontoTotal-->
+                <TotalWDiscount>1769.91</TotalWDiscount> <!--SubTotal-->
+                <SpecificTotal>230.09</SpecificTotal> <!--ImpuestoNeto-->
+                <TotalItem>2000.00</TotalItem> <!--MontoLinea-->
+            </Totals>
+            <AdditionalInfo>
+                <Info Name="TipoTransacciona" Value="01"/>
+                <Info Name="BaseImponible" Value="1769.91"/>
+                <Info Name="ImpuestoAsumidoEmisorFabrica" Value="0.00"/>
+            </AdditionalInfo>
+        </Item>
+        <Item>
+            <Codes>
+                <Code Name="Codigo" Data="" Value="6332000000000"/>
+            </Codes>
+            <Description>Web</Description> <!--Detalle del producto -->
+            <Qty>1.00</Qty>
+            <UnitOfMeasure>Unid</UnitOfMeasure>
+            <Price>398.23</Price>
+            <Taxes>
+                <Tax>
+                    <Code>01</Code> <!--Codigo-->
+                    <Description>08</Description>  <!--CodigoTarifa-->
+                    <Rate>13.00000</Rate> <!--Tarifa-->  <!--Rate>1.05800</Rate-->  <!--FactorIVA-->
+                    <Amount>51.77</Amount>
+                </Tax>
+            </Taxes>
+            <Totals>
+                <TotalBDiscount>398.23</TotalBDiscount> <!--MontoTotal-->
+                <TotalWDiscount>398.23</TotalWDiscount> <!--SubTotal-->
+                <SpecificTotal>51.77</SpecificTotal> <!--ImpuestoNeto-->
+                <TotalItem>450.00</TotalItem> <!--MontoLinea-->
+            </Totals>
+            <AdditionalInfo>
+                <Info Name="TipoTransacciona" Value="01"/>
+                <Info Name="BaseImponible" Value="398.23"/>
+                <Info Name="ImpuestoAsumidoEmisorFabrica" Value="0.00"/>
+            </AdditionalInfo>
+        </Item>
+        <Item>
+            <Codes>
+                <Code Name="Codigo" Data="" Value="6332000000000"/>
+            </Codes>
+            <Description>Web</Description> <!--Detalle del producto -->
+            <Qty>1.00</Qty>
+            <UnitOfMeasure>Unid</UnitOfMeasure>
+            <Price>398.23</Price>
+            <Taxes>
+                <Tax>
+                    <Code>01</Code> <!--Codigo-->
+                    <Description>08</Description>  <!--CodigoTarifa-->
+                    <Rate>13.00000</Rate> <!--Tarifa-->  <!--Rate>1.05800</Rate-->  <!--FactorIVA-->
+                    <Amount>51.77</Amount>
+                </Tax>
+            </Taxes>
+            <Totals>
+                <TotalBDiscount>398.23</TotalBDiscount> <!--MontoTotal-->
+                <TotalWDiscount>398.23</TotalWDiscount> <!--SubTotal-->
+                <SpecificTotal>51.77</SpecificTotal> <!--ImpuestoNeto-->
+                <TotalItem>450.00</TotalItem> <!--MontoLinea-->
+            </Totals>
+            <AdditionalInfo>
+                <Info Name="TipoTransacciona" Value="01"/>
+                <Info Name="BaseImponible" Value="398.23"/>
+                <Info Name="ImpuestoAsumidoEmisorFabrica" Value="0.00"/>
+            </AdditionalInfo>
+        </Item>
+    </Items>
+    <Totals>
+        <TotalTaxes>
+            <TotalTax>
+                <Description>TotalImpuesto</Description>
+                <Amount>563.72</Amount>
+            </TotalTax>
+            <TotalTax>
+                <Description>TotalImpAsumEmisorFabrica</Description>
+                <Amount>0.00</Amount>
+            </TotalTax>
+            <TotalTax>
+                <Code>01</Code>
+                <Description>08</Description>
+                <Amount>563.72</Amount>
+            </TotalTax>
+        </TotalTaxes>
+        <TotalDiscounts>
+            <Discount>
+                <Amount>0.00000</Amount> <!--TotalDescuentos-->
+            </Discount>
+        </TotalDiscounts>
+        <GrandTotal>
+            <TotalBDiscounts>4336.28</TotalBDiscounts> <!--TotalVenta-->
+            <TotalWDiscounts>4336.28</TotalWDiscounts> <!--TotalVentaNeta-->
+            <InvoiceTotal>4900.00</InvoiceTotal> <!--TotalComprobante-->
+        </GrandTotal>
+        <AdditionalInfo>
+            <Info Name="TotalServGravados" Value="4336.28"/>
+            <Info Name="TotalServExentos" Value="0"/>
+            <Info Name="TotalServExonerado" Value="0"/>
+            <Info Name="TotalMercanciasGravadas" Value="0.00"/>
+            <Info Name="TotalMercanciasExentas" Value="0"/>
+            <Info Name="TotalMercExonerada" Value="0"/>
+            <Info Name="TotalGravado" Value="4336.28"/>
+            <Info Name="TotalExento" Value="0"/>
+            <Info Name="TotalExonerado" Value="0"/>
+        </AdditionalInfo>
+    </Totals>
+    <Payments>
+        <Payment>
+            <Code>01</Code>
+            <Amount>4900.00</Amount>
+        </Payment>
+    </Payments>
+</Root>

@@ -4,19 +4,21 @@
 
 Migración de los 5 servicios de monitoreo de Digifact (GT, SV, DO, CR, PA) a un servicio unificado en .NET 8+ Worker Service. Actualmente existen 5 repositorios separados con código duplicado (copy-paste), credenciales hardcodeadas, sin tests, sin CI/CD y con una arquitectura de God Class. El objetivo es consolidar todo en un solo servicio configurable por país, con PostgreSQL como base de datos (en Docker para desarrollo, con opción de RDS PostgreSQL en producción), dashboards en la instancia de Grafana existente, servicios nativos de AWS y despliegue rápido mediante Docker Compose con opción de migrar a ECS Fargate.
 
+**Nota sobre variaciones por país:** Cada país tiene particularidades en sus flujos de certificación. PA y DO requieren firma digital PFX, PA adicionalmente requiere generación de QR y CUFE con JWT, y GT usa un token NUC estático en lugar del flujo dinámico de login. Los endpoints NUC varían por país (ej: SV usa `/api/v2/transform/nuc/`, CR usa `/api/cert/xml`). Los proveedores de email actuales difieren (GT/SV usan Gmail SMTP, CR/DO usan SES) pero la migración unifica todo bajo Amazon SES. Estas variaciones se reflejan en los requerimientos a continuación.
+
 ## Glosario
 
 - **Worker_Service**: Servicio de background en .NET 8+ que ejecuta tareas periódicas sin interfaz gráfica, desplegado como contenedor Docker (con opción de migrar a ECS Fargate)
 - **Monitor**: El servicio unificado de monitoreo que certifica documentos de prueba y reporta resultados
 - **Certificación_ASMX**: Proceso de certificar un documento de prueba via protocolo SOAP usando endpoints ASMX de Digifact
 - **Certificación_NUC**: Proceso de certificar un documento de prueba via API REST usando endpoints NUC de Digifact
-- **País_Config**: Configuración específica por país (GT, SV, DO, CR, PA) que incluye endpoints, credenciales, intervalos y destinatarios de alertas
+- **País_Config**: Configuración específica por país (GT, SV, DO, CR, PA) que incluye endpoints, credenciales, intervalos, destinatarios de alertas y campos específicos del país (TaxId, Requestor, NucUsername, formato de credenciales, y opcionalmente PfxSecretArn, PfxPasswordSecretArn, QrCode)
 - **Resultado_Monitoreo**: Registro que contiene el tiempo de transacción, estado (éxito/fallo), mensaje de error, tipo de certificación y timestamp, almacenado en PostgreSQL_DB
-- **Umbral_Alerta**: Tiempo máximo aceptable de respuesta (actualmente 5 segundos) antes de disparar una notificación
+- **Umbral_Alerta**: Tiempo máximo aceptable de respuesta (actualmente 5 segundos en CR/DO, 10 segundos en GT/PA) configurable por país antes de disparar una notificación
 - **Notificador**: Componente que envía alertas por Email (Amazon SES) y WhatsApp (Graph API) cuando se detectan errores o demoras
 - **PostgreSQL_DB**: Base de datos PostgreSQL que almacena los resultados de monitoreo, ejecutándose en Docker para desarrollo local y con opción de migrar a Amazon RDS PostgreSQL o Aurora PostgreSQL en producción
 - **Grafana_Dashboard**: Dashboard de Grafana existente conectado a PostgreSQL_DB como datasource que visualiza métricas de disponibilidad, tiempos de respuesta y alertas por país y tipo de certificación
-- **Secrets_Manager**: AWS Secrets Manager para almacenar credenciales de forma segura (connection strings, tokens, API keys)
+- **Secrets_Manager**: AWS Secrets Manager para almacenar credenciales de forma segura (connection strings, tokens, API keys, certificados PFX)
 - **Circuit_Breaker**: Patrón de resiliencia que detiene temporalmente las llamadas a un servicio externo cuando se detectan fallos consecutivos
 - **Health_Check**: Endpoint que reporta el estado de salud del servicio y sus dependencias
 - **ECS_Fargate**: AWS ECS con tipo de lanzamiento Fargate como opción de despliegue en producción para ejecutar el Worker_Service como contenedor serverless sin administrar servidores
@@ -25,6 +27,9 @@ Migración de los 5 servicios de monitoreo de Digifact (GT, SV, DO, CR, PA) a un
 - **CDK_Stack**: AWS CDK (Cloud Development Kit) stack en C# que define toda la infraestructura como código para despliegue rápido y repetible
 - **ECR**: Amazon Elastic Container Registry para almacenar las imágenes Docker del Worker_Service
 - **SSM_Parameter_Store**: AWS Systems Manager Parameter Store para configuración no sensible por ambiente y país
+- **Firma_Digital_PFX**: Proceso de firma digital usando certificado PFX (PKCS#12) requerido por PA y DO para firmar documentos antes de la certificación ASMX
+- **CUFE**: Código Único de Factura Electrónica, identificador único generado por PA como parte del proceso de certificación
+- **Token_Estático_NUC**: Token JWT estático usado por GT para autenticación NUC, almacenado en Secrets_Manager en lugar de obtenerse dinámicamente via login
 
 
 ## Requerimientos
@@ -52,6 +57,10 @@ Migración de los 5 servicios de monitoreo de Digifact (GT, SV, DO, CR, PA) a un
 3. WHEN la Certificación_ASMX completa exitosamente, THE Monitor SHALL crear un Resultado_Monitoreo con el tiempo de transacción, estado exitoso y tipo "ASMX_{PAIS}"
 4. IF la Certificación_ASMX falla por error de red, timeout o respuesta inválida, THEN THE Monitor SHALL crear un Resultado_Monitoreo con estado fallido, el mensaje de error y tipo "ASMX_{PAIS}"
 5. THE Monitor SHALL incrementar el consecutivo de certificación ASMX de forma atómica para evitar colisiones entre ciclos concurrentes
+6. WHERE País_Config indica que el país requiere Firma_Digital_PFX (PA, DO), THE Monitor SHALL obtener el certificado PFX y su contraseña desde Secrets_Manager (PfxSecretArn, PfxPasswordSecretArn) y firmar digitalmente el documento XML antes de enviarlo al endpoint ASMX
+7. WHERE País_Config indica que el país requiere generación de QR (PA), THE Monitor SHALL generar el código QR (ADDQR) e incluirlo en el documento XML antes de la certificación ASMX
+8. WHERE País_Config indica que el país requiere CUFE (PA), THE Monitor SHALL generar el Código Único de Factura Electrónica y obtener un JWT (GetJWT) como parte del proceso de preparación del documento antes de la certificación ASMX
+9. IF la firma digital PFX falla para un país que la requiere, THEN THE Monitor SHALL crear un Resultado_Monitoreo con estado fallido indicando el error de firma sin intentar la certificación ASMX
 
 ### Requerimiento 3: Certificación NUC (API REST)
 
@@ -59,11 +68,12 @@ Migración de los 5 servicios de monitoreo de Digifact (GT, SV, DO, CR, PA) a un
 
 #### Criterios de Aceptación
 
-1. WHEN un ciclo de monitoreo inicia para un país, THE Monitor SHALL obtener un token de autenticación del endpoint de login NUC configurado en País_Config
-2. WHEN el token es obtenido, THE Monitor SHALL preparar la plantilla XML NUC con los campos dinámicos actualizados (IssuedDateTime, Consecutivo) y enviar la solicitud POST al endpoint de certificación NUC
-3. WHEN la Certificación_NUC completa exitosamente, THE Monitor SHALL parsear la respuesta JSON (code, message, description, infoDetails) y crear un Resultado_Monitoreo con tipo "NUC_{PAIS}"
-4. IF la obtención del token falla, THEN THE Monitor SHALL registrar el error y crear un Resultado_Monitoreo con estado fallido sin intentar la certificación
-5. IF la Certificación_NUC falla por error de red, timeout o respuesta inválida, THEN THE Monitor SHALL crear un Resultado_Monitoreo con estado fallido y el mensaje de error
+1. WHEN un ciclo de monitoreo inicia para un país que tiene flujo dinámico de login NUC (CR, SV, DO, PA), THE Monitor SHALL obtener un token de autenticación del endpoint de login NUC configurado en País_Config usando las credenciales NucUsername y NucPassword del país, donde el formato de username varía por país (ej: CR usa {Country}.{TaxId}.{NucUsername}, SV usa SV.{NRC}.{NIT})
+2. WHEN un ciclo de monitoreo inicia para un país que usa Token_Estático_NUC (GT), THE Monitor SHALL obtener el token JWT estático desde Secrets_Manager en lugar de ejecutar el flujo de login dinámico
+3. WHEN el token es obtenido (dinámico o estático), THE Monitor SHALL preparar la plantilla XML NUC con los campos dinámicos actualizados (IssuedDateTime, Consecutivo) y enviar la solicitud POST al endpoint de certificación NUC configurado en País_Config (NucCertEndpoint, que varía por país, ej: SV usa /api/v2/transform/nuc/, CR usa /api/cert/xml)
+4. WHEN la Certificación_NUC completa exitosamente, THE Monitor SHALL parsear la respuesta JSON (code, message, description, infoDetails) y crear un Resultado_Monitoreo con tipo "NUC_{PAIS}"
+5. IF la obtención del token falla (ya sea login dinámico o lectura de token estático), THEN THE Monitor SHALL registrar el error y crear un Resultado_Monitoreo con estado fallido sin intentar la certificación
+6. IF la Certificación_NUC falla por error de red, timeout o respuesta inválida, THEN THE Monitor SHALL crear un Resultado_Monitoreo con estado fallido y el mensaje de error
 
 
 ### Requerimiento 4: Persistencia de Resultados en PostgreSQL
@@ -89,6 +99,7 @@ Migración de los 5 servicios de monitoreo de Digifact (GT, SV, DO, CR, PA) a un
 2. WHEN un Resultado_Monitoreo tiene tiempo de transacción mayor al Umbral_Alerta configurado AND las notificaciones no están suprimidas, THE Notificador SHALL enviar un email de alerta indicando degradación del servicio
 3. THE Notificador SHALL incluir en el email el país afectado, el tipo de certificación (ASMX o NUC), el tiempo de respuesta, el mensaje de error y la marca de tiempo del evento
 4. IF el envío de email via Amazon SES falla, THEN THE Notificador SHALL registrar el error en CloudWatch sin detener el ciclo de monitoreo
+5. THE Monitor SHALL migrar los países que actualmente usan Gmail SMTP (GT, SV) a Amazon SES como parte de la unificación, asegurando que todos los países usen un único proveedor de email
 
 ### Requerimiento 6: Notificaciones por WhatsApp
 
@@ -115,18 +126,24 @@ Migración de los 5 servicios de monitoreo de Digifact (GT, SV, DO, CR, PA) a un
 6. THE Monitor SHALL registrar en los logs cada vez que una notificación es omitida por estar deshabilitada, indicando el país, tipo y canal suprimido
 7. THE País_Config SHALL incluir un parámetro configurable notification_cooldown_minutes (por defecto: 15 minutos) que defina un tiempo mínimo entre notificaciones del mismo tipo para el mismo país, evitando spam cuando el servicio está intermitente
 
+
 ### Requerimiento 8: Gestión Segura de Credenciales
 
 **User Story:** Como equipo de seguridad, quiero que todas las credenciales se almacenen de forma segura fuera del código fuente, para eliminar el riesgo de exposición de secretos en el repositorio.
 
 #### Criterios de Aceptación
 
-1. THE Monitor SHALL obtener todas las credenciales sensibles (tokens de WhatsApp, API tokens, passwords de usuario) desde Secrets_Manager usando el SDK de AWS (AWSSDK.SecretsManager)
+1. THE Monitor SHALL obtener todas las credenciales sensibles (tokens de WhatsApp, API tokens, passwords de usuario, certificados PFX y sus contraseñas, tokens JWT estáticos) desde Secrets_Manager usando el SDK de AWS (AWSSDK.SecretsManager)
 2. THE Monitor SHALL obtener la configuración no sensible (endpoints, intervalos, umbrales, destinatarios) desde SSM_Parameter_Store organizada por jerarquía /monitoreo/{ambiente}/{pais}/
 3. THE Monitor SHALL validar que todas las credenciales requeridas estén disponibles al iniciar y registrar un error descriptivo en CloudWatch si alguna falta, sin exponer el valor de la credencial en los logs
 4. WHEN el Monitor registra logs o errores, THE Monitor SHALL enmascarar cualquier credencial o dato sensible que pudiera aparecer en mensajes de error de servicios externos
 5. THE Worker_Service SHALL excluir del repositorio todos los archivos que contengan credenciales mediante reglas en .gitignore
 6. THE Monitor SHALL usar el rol IAM asignado a la tarea ECS_Fargate para autenticarse con los servicios de AWS sin necesidad de access keys estáticas
+7. WHERE País_Config indica que el país usa Token_Estático_NUC (GT), THE Monitor SHALL almacenar el token JWT estático en Secrets_Manager migrándolo desde el App.config hardcodeado actual
+8. WHERE País_Config indica que el país requiere Firma_Digital_PFX (PA, DO), THE Monitor SHALL almacenar el certificado PFX (base64) y su contraseña en Secrets_Manager usando los ARNs configurados en PfxSecretArn y PfxPasswordSecretArn
+9. WHEN el ambiente es Development, THE Monitor SHALL soportar un archivo `appsettings.Secrets.json` como fuente alternativa de credenciales sensibles (tokens, passwords, PFX, connection strings) en lugar de Secrets_Manager, permitiendo desarrollo y pruebas locales sin conexión a AWS
+10. THE `appsettings.Secrets.json` SHALL estar incluido en `.gitignore` y THE Worker_Service SHALL incluir un archivo `appsettings.Secrets.template.json` con la estructura esperada (valores vacíos) como referencia para los desarrolladores
+11. THE Monitor SHALL cargar credenciales con la siguiente prioridad: (1) Secrets_Manager si está disponible, (2) `appsettings.Secrets.json` si existe y el ambiente es Development, (3) error descriptivo si ninguna fuente está disponible
 
 ### Requerimiento 9: Configuración Multi-País
 
@@ -136,8 +153,14 @@ Migración de los 5 servicios de monitoreo de Digifact (GT, SV, DO, CR, PA) a un
 
 1. THE Monitor SHALL soportar configuración independiente por país mediante SSM_Parameter_Store con jerarquía /monitoreo/{ambiente}/{pais}/ complementada con archivos appsettings.{PAIS}.json para desarrollo local
 2. WHEN se agrega un nuevo país, THE Monitor SHALL requerir únicamente la adición de parámetros en SSM_Parameter_Store y secretos en Secrets_Manager sin modificaciones al código fuente
-3. THE País_Config SHALL incluir como mínimo: endpoints ASMX y NUC, intervalo de monitoreo, rutas de plantillas XML, destinatarios de email, números de WhatsApp y umbral de alerta
-4. IF un campo obligatorio de País_Config está ausente o es inválido, THEN THE Monitor SHALL registrar un error descriptivo en CloudWatch al inicio e inhabilitar el monitoreo para ese país
+3. THE País_Config SHALL incluir como mínimo los siguientes campos obligatorios: endpoints ASMX y NUC (AsmxEndpoint, NucLoginEndpoint, NucCertEndpoint), intervalo de monitoreo, rutas de plantillas XML, destinatarios de email, números de WhatsApp, umbral de alerta, TaxId (NIT/RUC/Cédula del emisor de prueba), Requestor (GUID del requestor ASMX) y NucUsername (username para login NUC)
+4. THE País_Config SHALL incluir un campo nuc_auth_mode (valores: "dynamic" o "static") que indique si el país usa flujo de login dinámico o Token_Estático_NUC
+5. THE País_Config SHALL incluir un campo nuc_username_format que defina el formato de credenciales NUC por país (ej: "{Country}.{TaxId}.{NucUsername}" para CR, "SV.{NRC}.{NIT}" para SV) para construir el username de login dinámicamente
+6. WHERE País_Config indica que el país requiere Firma_Digital_PFX, THE País_Config SHALL incluir los campos opcionales: PfxSecretArn (ARN del secreto con PFX base64) y PfxPasswordSecretArn (ARN del secreto con la contraseña del PFX)
+7. WHERE País_Config indica que el país requiere generación de QR (PA), THE País_Config SHALL incluir el campo opcional QrCode con la configuración necesaria para la generación de códigos QR
+8. IF un campo obligatorio de País_Config está ausente o es inválido, THEN THE Monitor SHALL registrar un error descriptivo en CloudWatch al inicio e inhabilitar el monitoreo para ese país
+9. THE País_Config SHALL documentar las variaciones conocidas por país: PA requiere Firma_Digital_PFX + QR + CUFE + JWT, DO requiere Firma_Digital_PFX, GT usa Token_Estático_NUC, y los endpoints NUC varían (SV: /api/v2/transform/nuc/, CR: /api/cert/xml)
+
 
 ### Requerimiento 10: Resiliencia y Tolerancia a Fallos
 
@@ -206,6 +229,8 @@ Migración de los 5 servicios de monitoreo de Digifact (GT, SV, DO, CR, PA) a un
 3. WHEN se ejecutan los tests unitarios, THE Worker_Service SHALL validar que un Resultado_Monitoreo creado con datos válidos y luego serializado y deserializado produce un objeto equivalente al original (propiedad round-trip)
 4. THE Worker_Service SHALL incluir tests que validen que la configuración de cada país se carga correctamente y que los campos obligatorios son validados
 5. THE Worker_Service SHALL incluir tests que validen la escritura y lectura de registros en PostgreSQL_DB verificando que las columnas se persisten correctamente
+6. THE Worker_Service SHALL incluir tests que validen el flujo de Certificación_ASMX con Firma_Digital_PFX para países que lo requieren (PA, DO), verificando que el documento se firma correctamente antes del envío
+7. THE Worker_Service SHALL incluir tests que validen ambos modos de autenticación NUC: flujo dinámico de login (CR, SV, DO, PA) y Token_Estático_NUC (GT)
 
 ### Requerimiento 15: Herramienta Visual para Pruebas Locales
 
