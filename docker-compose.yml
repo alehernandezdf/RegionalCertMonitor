@@ -12,6 +12,10 @@ services:
     volumes:
       - ./src/Monitoreo.Worker/appsettings.json:/app/appsettings.json:ro
       - ./src/Monitoreo.Worker/appsettings.CR.json:/app/appsettings.CR.json:ro
+      - ./src/Monitoreo.Worker/appsettings.GT.json:/app/appsettings.GT.json:ro
+      - ./src/Monitoreo.Worker/appsettings.SV.json:/app/appsettings.SV.json:ro
+      - ./src/Monitoreo.Worker/appsettings.DO.json:/app/appsettings.DO.json:ro
+      - ./src/Monitoreo.Worker/appsettings.PA.json:/app/appsettings.PA.json:ro
       - ./src/Monitoreo.Worker/appsettings.Secrets.json:/app/appsettings.Secrets.json:ro
       - ./src/Monitoreo.Worker/Templates:/app/Templates:ro
     depends_on:
