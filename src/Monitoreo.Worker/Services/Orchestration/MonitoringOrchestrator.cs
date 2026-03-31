@@ -42,10 +42,18 @@ public class MonitoringOrchestrator : IMonitoringOrchestrator
 
         _logger.LogInformation("Iniciando ciclo de monitoreo para {Country}", config.CountryCode);
 
-        // 1. Ejecutar certificaciones ASMX y NUC
+        // 1. Ejecutar certificaciones habilitadas para este pais
         var results = new List<MonitoringResult>();
         foreach (var certService in _certServices)
         {
+            // Filtrar tipos no habilitados para este pais
+            if (certService.Type == CertificationType.API && !config.ApiEnabled)
+                continue;
+            if (certService.Type == CertificationType.NUC && string.IsNullOrEmpty(config.NucCertEndpoint))
+                continue;
+            if (certService.Type == CertificationType.ASMX && string.IsNullOrEmpty(config.AsmxEndpoint))
+                continue;
+
             try
             {
                 using var scope = _logger.BeginScope(new Dictionary<string, object>
@@ -58,7 +66,7 @@ public class MonitoringOrchestrator : IMonitoringOrchestrator
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error en certificación {CertType} para {Country}",
+                _logger.LogError(ex, "Error en certificacion {CertType} para {Country}",
                     certService.Type, config.CountryCode);
             }
         }
