@@ -42,11 +42,11 @@ public class MonitoringOrchestrator : IMonitoringOrchestrator
 
         _logger.LogInformation("Iniciando ciclo de monitoreo para {Country}", config.CountryCode);
 
-        // 1. Ejecutar certificaciones habilitadas para este pais
-        var results = new List<MonitoringResult>();
+        // 1. Ejecutar certificaciones habilitadas para este pais EN PARALELO
+        // FEAT::BE-661::2026-03-31::AHL::Certificaciones en paralelo dentro de cada país
+        var certTasks = new List<Task<MonitoringResult?>>();
         foreach (var certService in _certServices)
         {
-            // Filtrar tipos no habilitados para este pais
             if (certService.Type == CertificationType.API && !config.ApiEnabled)
                 continue;
             if (certService.Type == CertificationType.NUC && string.IsNullOrEmpty(config.NucCertEndpoint))
@@ -54,22 +54,31 @@ public class MonitoringOrchestrator : IMonitoringOrchestrator
             if (certService.Type == CertificationType.ASMX && string.IsNullOrEmpty(config.AsmxEndpoint))
                 continue;
 
-            try
+            var svc = certService;
+            certTasks.Add(Task.Run(async () =>
             {
-                using var scope = _logger.BeginScope(new Dictionary<string, object>
+                try
                 {
-                    ["CertificationType"] = certService.Type.ToString()
-                });
-
-                var result = await certService.CertifyAsync(config, ct);
-                results.Add(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error en certificacion {CertType} para {Country}",
-                    certService.Type, config.CountryCode);
-            }
+                    using var scope = _logger.BeginScope(new Dictionary<string, object>
+                    {
+                        ["CertificationType"] = svc.Type.ToString()
+                    });
+                    return (MonitoringResult?)await svc.CertifyAsync(config, ct);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error en certificacion {CertType} para {Country}",
+                        svc.Type, config.CountryCode);
+                    return null;
+                }
+            }, ct));
         }
+
+        await Task.WhenAll(certTasks);
+        var results = certTasks
+            .Where(t => t.Result != null)
+            .Select(t => t.Result!)
+            .ToList();
 
         // 2. Persistir resultados (SIEMPRE, independiente de flags de notificación)
         foreach (var result in results)

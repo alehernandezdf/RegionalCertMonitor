@@ -71,6 +71,7 @@ services:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: digifact
       GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/monitoreo.json
+      GF_USERS_DEFAULT_THEME: dark
     ports:
       - "3000:3000"
     volumes:

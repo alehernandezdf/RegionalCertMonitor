@@ -126,7 +126,7 @@ public class ApiFelCertificationService : ICertificationService
         XNamespace dte = "http://www.sat.gob.gt/dte/fel/0.2.0";
         var datosGenerales = doc.Descendants(dte + "DatosGenerales").FirstOrDefault();
         if (datosGenerales != null)
-            datosGenerales.SetAttributeValue("FechaHoraEmision", DateTimeOffset.Now.ToString("yyyy-MM-ddTHH:mm:ss"));
+            datosGenerales.SetAttributeValue("FechaHoraEmision", TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("America/Guatemala")).ToString("yyyy-MM-ddTHH:mm:ss"));
         return doc.ToString();
     }
 }

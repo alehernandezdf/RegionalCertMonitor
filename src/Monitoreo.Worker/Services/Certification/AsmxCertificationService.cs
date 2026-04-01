@@ -136,10 +136,11 @@ public class AsmxCertificationService : ICertificationService
         catch { return (false, responseBody[..Math.Min(500, responseBody.Length)]); }
     }
 
+    // BEGIN-FIX::BE-676::2026-03-31::AHL::InjectDynamicFields con soporte SV (GUID, Secuencial 15 dígitos)
     private static string InjectDynamicFields(string xml, CountryConfig config, long consecutivo)
     {
         var doc = XDocument.Parse(xml);
-        var now = DateTimeOffset.Now;
+        var now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("America/Guatemala"));
 
         if (config.CountryCode == "GT")
         {
@@ -149,6 +150,24 @@ public class AsmxCertificationService : ICertificationService
             if (datosGenerales != null)
             {
                 datosGenerales.SetAttributeValue("FechaHoraEmision", now.ToString("yyyy-MM-ddTHH:mm:ss"));
+            }
+        }
+        else if (config.CountryCode == "SV")
+        {
+            // SV: GUID dinámico + IssuedDateTime + Secuencial 15 dígitos
+            var guidNode = doc.Descendants("GUID").FirstOrDefault();
+            if (guidNode != null)
+                guidNode.Value = Guid.NewGuid().ToString().ToUpper();
+
+            var issued = doc.Descendants("IssuedDateTime").FirstOrDefault();
+            if (issued != null)
+                issued.Value = now.ToString("yyyy-MM-ddTHH:mm:ss-06:00");
+
+            foreach (var info in doc.Descendants("Info").ToList())
+            {
+                var name = info.Attribute("Name")?.Value;
+                if (name == "Secuencial")
+                    info.SetAttributeValue("Value", (6000000000 + consecutivo).ToString("D15"));
             }
         }
         else
@@ -178,5 +197,6 @@ public class AsmxCertificationService : ICertificationService
 
         return doc.ToString();
     }
+    // END-FIX::BE-676::2026-03-31::AHL::InjectDynamicFields con soporte SV (GUID, Secuencial 15 dígitos)
 }
 // END-FEAT::BE-662::2026-03-25::AHL::Servicio ASMX SOAP con RequestTransaction envelope correcto para Digifact

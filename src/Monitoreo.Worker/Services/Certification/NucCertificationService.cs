@@ -204,24 +204,44 @@ public class NucCertificationService : ICertificationService
             ErrorMessage: isSuccess ? null : $"Code={code}, Message={message}, Desc={description?[..Math.Min(200, description?.Length ?? 0)]}");
     }
 
+    // BEGIN-FEAT::BE-675::2026-03-31::AHL::Inyección dinámica de campos NUC: fecha, consecutivo, NumeroDF, CodigoSeguridad y referencia interna
     private static string InjectNucDynamicFields(string xml, CountryConfig config, long consecutivo)
     {
         var doc = XDocument.Parse(xml);
+        var gtNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("America/Guatemala"));
 
         // Buscar IssuedDateTime en cualquier nivel
         var issued = doc.Descendants("IssuedDateTime").FirstOrDefault();
         if (issued != null)
-            issued.Value = DateTimeOffset.Now.ToString("yyyy-MM-ddTHH:mm:ssK");
+            issued.Value = gtNow.ToString("yyyy-MM-ddTHH:mm:ss-06:00");
 
-        // Buscar Consecutivo como atributo Value en nodo Info[@Name='Consecutivo']
-        var infoNodes = doc.Descendants("Info");
+        // GUID dinámico para SV (evitar duplicados)
+        var guidNode = doc.Descendants("GUID").FirstOrDefault();
+        if (guidNode != null)
+            guidNode.Value = Guid.NewGuid().ToString().ToUpper();
+
+        // Buscar Consecutivo o Secuencia como atributo Value en nodo Info
+        var infoNodes = doc.Descendants("Info").ToList();
         foreach (var info in infoNodes)
         {
-            if (info.Attribute("Name")?.Value == "Consecutivo")
+            var name = info.Attribute("Name")?.Value;
+            if (name == "Consecutivo" || name == "Secuencia")
             {
-                // 10 digitos, rango alto para no colisionar con monitoreo viejo
                 info.SetAttributeValue("Value", (9900000 + consecutivo).ToString("D10"));
-                break;
+            }
+            // SV usa Secuencial con 15 dígitos, base 400000000000
+            else if (name == "Secuencial")
+            {
+                info.SetAttributeValue("Value", (400000000000 + consecutivo).ToString("D15"));
+            }
+            // NumeroDF y CodigoSeguridad dinámicos solo para PA (evitar romper Clave de CR)
+            else if (name == "NumeroDF" && config.CountryCode == "PA")
+            {
+                info.SetAttributeValue("Value", (1140000000 + consecutivo).ToString());
+            }
+            else if (name == "CodigoSeguridad" && config.CountryCode == "PA")
+            {
+                info.SetAttributeValue("Value", (800000 + consecutivo).ToString("D9"));
             }
         }
 
@@ -232,6 +252,7 @@ public class NucCertificationService : ICertificationService
 
         return doc.ToString();
     }
+    // END-FEAT::BE-675::2026-03-31::AHL::Inyección dinámica de campos NUC: fecha, consecutivo, NumeroDF, CodigoSeguridad y referencia interna
 
     private record NucResponse(bool Success, string? ErrorMessage);
 }
