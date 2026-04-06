@@ -41,7 +41,11 @@ public class AsmxCertificationService : ICertificationService
             var soapEnvelope = BuildSoapEnvelope(config, xml);
             var client = _httpClientFactory.CreateClient("AsmxClient");
             var content = new StringContent(soapEnvelope, System.Text.Encoding.UTF8, "text/xml");
-            content.Headers.Add("SOAPAction", "https://corec.digifact.com/schema/ws/RequestTransaction");
+
+            var soapAction = config.CountryCode == "GT"
+                ? "http://www.fact.com.mx/schema/ws/RequestTransaction"
+                : "https://corec.digifact.com/schema/ws/RequestTransaction";
+            content.Headers.Add("SOAPAction", soapAction);
 
             _logger.LogDebug("ASMX {Country} #{Consecutivo} REQUEST enviando...", config.CountryCode, consecutivo);
 
@@ -75,13 +79,27 @@ public class AsmxCertificationService : ICertificationService
 
     private static string BuildSoapEnvelope(CountryConfig config, string xmlData)
     {
-        var username = $"{config.CountryCode}.{config.TaxId}.{config.NucUsername}";
+        var username = config.AsmxUsernameFormat != null
+            ? config.AsmxUsernameFormat
+                .Replace("{Country}", config.CountryCode)
+                .Replace("{TaxId}", config.TaxId)
+                .Replace("{NucUsername}", config.NucUsername)
+            : $"{config.CountryCode}.{config.TaxId}.{config.NucUsername}";
+
+        var transaction = config.AsmxTransactionType;
+        var soapAction = config.CountryCode == "GT"
+            ? "http://www.fact.com.mx/schema/ws/RequestTransaction"
+            : "https://corec.digifact.com/schema/ws/RequestTransaction";
+        var wsNamespace = config.CountryCode == "GT"
+            ? "http://www.fact.com.mx/schema/ws"
+            : "https://corec.digifact.com/schema/ws";
+
         return $@"<?xml version=""1.0"" encoding=""utf-8""?>
-<soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"" xmlns:ws=""https://corec.digifact.com/schema/ws"">
+<soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"" xmlns:ws=""{wsNamespace}"">
   <soap:Body>
     <ws:RequestTransaction>
       <ws:Requestor>{config.Requestor}</ws:Requestor>
-      <ws:Transaction>CERTIFICATE_FE</ws:Transaction>
+      <ws:Transaction>{transaction}</ws:Transaction>
       <ws:Country>{config.CountryCode}</ws:Country>
       <ws:Entity>{config.TaxId}</ws:Entity>
       <ws:User>{config.Requestor}</ws:User>
@@ -118,35 +136,67 @@ public class AsmxCertificationService : ICertificationService
         catch { return (false, responseBody[..Math.Min(500, responseBody.Length)]); }
     }
 
+    // BEGIN-FIX::BE-676::2026-03-31::AHL::InjectDynamicFields con soporte SV (GUID, Secuencial 15 dígitos)
     private static string InjectDynamicFields(string xml, CountryConfig config, long consecutivo)
     {
         var doc = XDocument.Parse(xml);
-        var ns = doc.Root?.GetDefaultNamespace() ?? XNamespace.None;
+        var now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("America/Guatemala"));
 
-        var now = DateTimeOffset.Now;
-        // Clave CR: 50 digitos exactos
-        // {codigopais:3}{dia:2}{mes:2}{anio:2}{emisor:12}{sucursal:3}{puntodeventa:5}{tipodoc:2}{correlativo:10}{situacion:1}{codigdseg:8}
-        var emisor = "003123456789"; // 12 digitos
-        var sucursal = "000";
-        var puntoVenta = "00070"; // Caja ASMX monitoreo unificado
-        var tipodoc = "01";
-        var correlativo = consecutivo.ToString("D10");
-        var situacion = "1";
-        var codigoSeg = "00000001";
+        if (config.CountryCode == "GT")
+        {
+            // GT: solo actualizar FechaHoraEmision en namespace dte:
+            XNamespace dte = "http://www.sat.gob.gt/dte/fel/0.2.0";
+            var datosGenerales = doc.Descendants(dte + "DatosGenerales").FirstOrDefault();
+            if (datosGenerales != null)
+            {
+                datosGenerales.SetAttributeValue("FechaHoraEmision", now.ToString("yyyy-MM-ddTHH:mm:ss"));
+            }
+        }
+        else if (config.CountryCode == "SV")
+        {
+            // SV: GUID dinámico + IssuedDateTime + Secuencial 15 dígitos
+            var guidNode = doc.Descendants("GUID").FirstOrDefault();
+            if (guidNode != null)
+                guidNode.Value = Guid.NewGuid().ToString().ToUpper();
 
-        var clave = $"506{now:ddMMyy}{emisor}{sucursal}{puntoVenta}{tipodoc}{correlativo}{situacion}{codigoSeg}";
-        var numConsecutivo = $"{sucursal}{puntoVenta}{tipodoc}{correlativo}";
+            var issued = doc.Descendants("IssuedDateTime").FirstOrDefault();
+            if (issued != null)
+                issued.Value = now.ToString("yyyy-MM-ddTHH:mm:ss-06:00");
 
-        var claveNode = doc.Descendants(ns + "Clave").FirstOrDefault();
-        if (claveNode != null) claveNode.Value = clave;
+            foreach (var info in doc.Descendants("Info").ToList())
+            {
+                var name = info.Attribute("Name")?.Value;
+                if (name == "Secuencial")
+                    info.SetAttributeValue("Value", (6000000000 + consecutivo).ToString("D15"));
+            }
+        }
+        else
+        {
+            // CR y otros: actualizar Clave, FechaEmision, NumeroConsecutivo
+            var ns = doc.Root?.GetDefaultNamespace() ?? XNamespace.None;
+            var emisor = "003123456789";
+            var sucursal = "000";
+            var puntoVenta = "00070";
+            var tipodoc = "01";
+            var correlativo = consecutivo.ToString("D10");
+            var situacion = "1";
+            var codigoSeg = "00000001";
 
-        var fecha = doc.Descendants(ns + "FechaEmision").FirstOrDefault();
-        if (fecha != null) fecha.Value = now.ToString("yyyy-MM-ddTHH:mm:ss");
+            var clave = $"506{now:ddMMyy}{emisor}{sucursal}{puntoVenta}{tipodoc}{correlativo}{situacion}{codigoSeg}";
+            var numConsecutivo = $"{sucursal}{puntoVenta}{tipodoc}{correlativo}";
 
-        var numConsec = doc.Descendants(ns + "NumeroConsecutivo").FirstOrDefault();
-        if (numConsec != null) numConsec.Value = numConsecutivo;
+            var claveNode = doc.Descendants(ns + "Clave").FirstOrDefault();
+            if (claveNode != null) claveNode.Value = clave;
+
+            var fecha = doc.Descendants(ns + "FechaEmision").FirstOrDefault();
+            if (fecha != null) fecha.Value = now.ToString("yyyy-MM-ddTHH:mm:ss");
+
+            var numConsec = doc.Descendants(ns + "NumeroConsecutivo").FirstOrDefault();
+            if (numConsec != null) numConsec.Value = numConsecutivo;
+        }
 
         return doc.ToString();
     }
+    // END-FIX::BE-676::2026-03-31::AHL::InjectDynamicFields con soporte SV (GUID, Secuencial 15 dígitos)
 }
 // END-FEAT::BE-662::2026-03-25::AHL::Servicio ASMX SOAP con RequestTransaction envelope correcto para Digifact

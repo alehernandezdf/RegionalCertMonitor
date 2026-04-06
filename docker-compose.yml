@@ -12,6 +12,10 @@ services:
     volumes:
       - ./src/Monitoreo.Worker/appsettings.json:/app/appsettings.json:ro
       - ./src/Monitoreo.Worker/appsettings.CR.json:/app/appsettings.CR.json:ro
+      - ./src/Monitoreo.Worker/appsettings.GT.json:/app/appsettings.GT.json:ro
+      - ./src/Monitoreo.Worker/appsettings.SV.json:/app/appsettings.SV.json:ro
+      - ./src/Monitoreo.Worker/appsettings.DO.json:/app/appsettings.DO.json:ro
+      - ./src/Monitoreo.Worker/appsettings.PA.json:/app/appsettings.PA.json:ro
       - ./src/Monitoreo.Worker/appsettings.Secrets.json:/app/appsettings.Secrets.json:ro
       - ./src/Monitoreo.Worker/Templates:/app/Templates:ro
     depends_on:
@@ -67,11 +71,14 @@ services:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: digifact
       GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/monitoreo.json
+      GF_USERS_DEFAULT_THEME: dark
+      GF_PANELS_DISABLE_SANITIZE_HTML: "true"
     ports:
       - "3000:3000"
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - ./XML_MONITOREO/Resources:/usr/share/grafana/public/img/flags:ro
       - grafanadata:/var/lib/grafana
     depends_on:
       postgres:

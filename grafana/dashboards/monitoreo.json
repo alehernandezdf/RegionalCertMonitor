@@ -1,528 +1,127 @@
 {
-    "refresh":  "1m",
-    "panels":  [
-                   {
-                       "fieldConfig":  {
-                                           "defaults":  {
-                                                            "custom":  {
-                                                                           "fillOpacity":  10,
-                                                                           "thresholdsStyle":  {
-                                                                                                   "mode":  "area"
-                                                                                               },
-                                                                           "showPoints":  "auto",
-                                                                           "drawStyle":  "line",
-                                                                           "lineWidth":  2,
-                                                                           "pointSize":  5
-                                                                       },
-                                                            "decimals":  4,
-                                                            "thresholds":  {
-                                                                               "steps":  [
-                                                                                             {
-                                                                                                 "value":  null,
-                                                                                                 "color":  "transparent"
-                                                                                             },
-                                                                                             {
-                                                                                                 "value":  5,
-                                                                                                 "color":  "rgba(255,0,0,0.15)"
-                                                                                             }
-                                                                                         ],
-                                                                               "mode":  "absolute"
-                                                                           },
-                                                            "unit":  "none"
-                                                        },
-                                           "overrides":  [
-                                                             {
-                                                                 "properties":  [
-                                                                                    {
-                                                                                        "id":  "color",
-                                                                                        "value":  {
-                                                                                                      "mode":  "fixed",
-                                                                                                      "fixedColor":  "#3274D9"
-                                                                                                  }
-                                                                                    }
-                                                                                ],
-                                                                 "matcher":  {
-                                                                                 "id":  "byName",
-                                                                                 "options":  "ASMX"
-                                                                             }
-                                                             },
-                                                             {
-                                                                 "properties":  [
-                                                                                    {
-                                                                                        "id":  "color",
-                                                                                        "value":  {
-                                                                                                      "mode":  "fixed",
-                                                                                                      "fixedColor":  "#E0B400"
-                                                                                                  }
-                                                                                    }
-                                                                                ],
-                                                                 "matcher":  {
-                                                                                 "id":  "byName",
-                                                                                 "options":  "API"
-                                                                             }
-                                                             }
-                                                         ]
-                                       },
-                       "id":  1,
-                       "gridPos":  {
-                                       "y":  0,
-                                       "w":  8,
-                                       "x":  0,
-                                       "h":  10
-                                   },
-                       "datasource":  {
-                                          "type":  "grafana-postgresql-datasource",
-                                          "uid":  "monitoreo-pg"
-                                      },
-                       "title":  "Guatemala 🇬🇹",
-                       "targets":  [
-                                       {
-                                           "rawSql":  "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"ASMX\" FROM monitoring_results WHERE country = \u0027GT\u0027 AND certification_type = \u0027ASMX\u0027 AND $__timeFilter(created_at) ORDER BY created_at",
-                                           "format":  "time_series",
-                                           "refId":  "A"
-                                       },
-                                       {
-                                           "rawSql":  "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"API\" FROM monitoring_results WHERE country = \u0027GT\u0027 AND certification_type = \u0027NUC\u0027 AND $__timeFilter(created_at) ORDER BY created_at",
-                                           "format":  "time_series",
-                                           "refId":  "B"
-                                       }
-                                   ],
-                       "type":  "timeseries",
-                       "options":  {
-                                       "legend":  {
-                                                      "placement":  "bottom",
-                                                      "calcs":  [
-                                                                    "min",
-                                                                    "max",
-                                                                    "mean",
-                                                                    "lastNotNull"
-                                                                ],
-                                                      "displayMode":  "table"
-                                                  },
-                                       "tooltip":  {
-                                                       "mode":  "multi"
-                                                   }
-                                   }
-                   },
-                   {
-                       "fieldConfig":  {
-                                           "defaults":  {
-                                                            "custom":  {
-                                                                           "fillOpacity":  10,
-                                                                           "thresholdsStyle":  {
-                                                                                                   "mode":  "area"
-                                                                                               },
-                                                                           "showPoints":  "auto",
-                                                                           "drawStyle":  "line",
-                                                                           "lineWidth":  2,
-                                                                           "pointSize":  5
-                                                                       },
-                                                            "decimals":  4,
-                                                            "thresholds":  {
-                                                                               "steps":  [
-                                                                                             {
-                                                                                                 "value":  null,
-                                                                                                 "color":  "transparent"
-                                                                                             },
-                                                                                             {
-                                                                                                 "value":  5,
-                                                                                                 "color":  "rgba(255,0,0,0.15)"
-                                                                                             }
-                                                                                         ],
-                                                                               "mode":  "absolute"
-                                                                           },
-                                                            "unit":  "none"
-                                                        },
-                                           "overrides":  [
-                                                             {
-                                                                 "properties":  [
-                                                                                    {
-                                                                                        "id":  "color",
-                                                                                        "value":  {
-                                                                                                      "mode":  "fixed",
-                                                                                                      "fixedColor":  "#3274D9"
-                                                                                                  }
-                                                                                    }
-                                                                                ],
-                                                                 "matcher":  {
-                                                                                 "id":  "byName",
-                                                                                 "options":  "ASMX"
-                                                                             }
-                                                             },
-                                                             {
-                                                                 "properties":  [
-                                                                                    {
-                                                                                        "id":  "color",
-                                                                                        "value":  {
-                                                                                                      "mode":  "fixed",
-                                                                                                      "fixedColor":  "#E0B400"
-                                                                                                  }
-                                                                                    }
-                                                                                ],
-                                                                 "matcher":  {
-                                                                                 "id":  "byName",
-                                                                                 "options":  "API"
-                                                                             }
-                                                             }
-                                                         ]
-                                       },
-                       "id":  2,
-                       "gridPos":  {
-                                       "y":  0,
-                                       "w":  8,
-                                       "x":  8,
-                                       "h":  10
-                                   },
-                       "datasource":  {
-                                          "type":  "grafana-postgresql-datasource",
-                                          "uid":  "monitoreo-pg"
-                                      },
-                       "title":  "El Salvador 🇸🇻",
-                       "targets":  [
-                                       {
-                                           "rawSql":  "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"ASMX\" FROM monitoring_results WHERE country = \u0027SV\u0027 AND certification_type = \u0027ASMX\u0027 AND $__timeFilter(created_at) ORDER BY created_at",
-                                           "format":  "time_series",
-                                           "refId":  "A"
-                                       },
-                                       {
-                                           "rawSql":  "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"API\" FROM monitoring_results WHERE country = \u0027SV\u0027 AND certification_type = \u0027NUC\u0027 AND $__timeFilter(created_at) ORDER BY created_at",
-                                           "format":  "time_series",
-                                           "refId":  "B"
-                                       }
-                                   ],
-                       "type":  "timeseries",
-                       "options":  {
-                                       "legend":  {
-                                                      "placement":  "bottom",
-                                                      "calcs":  [
-                                                                    "min",
-                                                                    "max",
-                                                                    "mean",
-                                                                    "lastNotNull"
-                                                                ],
-                                                      "displayMode":  "table"
-                                                  },
-                                       "tooltip":  {
-                                                       "mode":  "multi"
-                                                   }
-                                   }
-                   },
-                   {
-                       "fieldConfig":  {
-                                           "defaults":  {
-                                                            "custom":  {
-                                                                           "fillOpacity":  10,
-                                                                           "thresholdsStyle":  {
-                                                                                                   "mode":  "area"
-                                                                                               },
-                                                                           "showPoints":  "auto",
-                                                                           "drawStyle":  "line",
-                                                                           "lineWidth":  2,
-                                                                           "pointSize":  5
-                                                                       },
-                                                            "decimals":  4,
-                                                            "thresholds":  {
-                                                                               "steps":  [
-                                                                                             {
-                                                                                                 "value":  null,
-                                                                                                 "color":  "transparent"
-                                                                                             },
-                                                                                             {
-                                                                                                 "value":  5,
-                                                                                                 "color":  "rgba(255,0,0,0.15)"
-                                                                                             }
-                                                                                         ],
-                                                                               "mode":  "absolute"
-                                                                           },
-                                                            "unit":  "none"
-                                                        },
-                                           "overrides":  [
-                                                             {
-                                                                 "properties":  [
-                                                                                    {
-                                                                                        "id":  "color",
-                                                                                        "value":  {
-                                                                                                      "mode":  "fixed",
-                                                                                                      "fixedColor":  "#3274D9"
-                                                                                                  }
-                                                                                    }
-                                                                                ],
-                                                                 "matcher":  {
-                                                                                 "id":  "byName",
-                                                                                 "options":  "ASMX"
-                                                                             }
-                                                             },
-                                                             {
-                                                                 "properties":  [
-                                                                                    {
-                                                                                        "id":  "color",
-                                                                                        "value":  {
-                                                                                                      "mode":  "fixed",
-                                                                                                      "fixedColor":  "#E0B400"
-                                                                                                  }
-                                                                                    }
-                                                                                ],
-                                                                 "matcher":  {
-                                                                                 "id":  "byName",
-                                                                                 "options":  "API"
-                                                                             }
-                                                             }
-                                                         ]
-                                       },
-                       "id":  3,
-                       "gridPos":  {
-                                       "y":  0,
-                                       "w":  8,
-                                       "x":  16,
-                                       "h":  10
-                                   },
-                       "datasource":  {
-                                          "type":  "grafana-postgresql-datasource",
-                                          "uid":  "monitoreo-pg"
-                                      },
-                       "title":  "Panama 🇵🇦",
-                       "targets":  [
-                                       {
-                                           "rawSql":  "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"ASMX\" FROM monitoring_results WHERE country = \u0027PA\u0027 AND certification_type = \u0027ASMX\u0027 AND $__timeFilter(created_at) ORDER BY created_at",
-                                           "format":  "time_series",
-                                           "refId":  "A"
-                                       },
-                                       {
-                                           "rawSql":  "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"API\" FROM monitoring_results WHERE country = \u0027PA\u0027 AND certification_type = \u0027NUC\u0027 AND $__timeFilter(created_at) ORDER BY created_at",
-                                           "format":  "time_series",
-                                           "refId":  "B"
-                                       }
-                                   ],
-                       "type":  "timeseries",
-                       "options":  {
-                                       "legend":  {
-                                                      "placement":  "bottom",
-                                                      "calcs":  [
-                                                                    "min",
-                                                                    "max",
-                                                                    "mean",
-                                                                    "lastNotNull"
-                                                                ],
-                                                      "displayMode":  "table"
-                                                  },
-                                       "tooltip":  {
-                                                       "mode":  "multi"
-                                                   }
-                                   }
-                   },
-                   {
-                       "fieldConfig":  {
-                                           "defaults":  {
-                                                            "custom":  {
-                                                                           "fillOpacity":  10,
-                                                                           "thresholdsStyle":  {
-                                                                                                   "mode":  "area"
-                                                                                               },
-                                                                           "showPoints":  "auto",
-                                                                           "drawStyle":  "line",
-                                                                           "lineWidth":  2,
-                                                                           "pointSize":  5
-                                                                       },
-                                                            "decimals":  4,
-                                                            "thresholds":  {
-                                                                               "steps":  [
-                                                                                             {
-                                                                                                 "value":  null,
-                                                                                                 "color":  "transparent"
-                                                                                             },
-                                                                                             {
-                                                                                                 "value":  5,
-                                                                                                 "color":  "rgba(255,0,0,0.15)"
-                                                                                             }
-                                                                                         ],
-                                                                               "mode":  "absolute"
-                                                                           },
-                                                            "unit":  "none"
-                                                        },
-                                           "overrides":  [
-                                                             {
-                                                                 "properties":  [
-                                                                                    {
-                                                                                        "id":  "color",
-                                                                                        "value":  {
-                                                                                                      "mode":  "fixed",
-                                                                                                      "fixedColor":  "#3274D9"
-                                                                                                  }
-                                                                                    }
-                                                                                ],
-                                                                 "matcher":  {
-                                                                                 "id":  "byName",
-                                                                                 "options":  "ASMX"
-                                                                             }
-                                                             },
-                                                             {
-                                                                 "properties":  [
-                                                                                    {
-                                                                                        "id":  "color",
-                                                                                        "value":  {
-                                                                                                      "mode":  "fixed",
-                                                                                                      "fixedColor":  "#E0B400"
-                                                                                                  }
-                                                                                    }
-                                                                                ],
-                                                                 "matcher":  {
-                                                                                 "id":  "byName",
-                                                                                 "options":  "API"
-                                                                             }
-                                                             }
-                                                         ]
-                                       },
-                       "id":  4,
-                       "gridPos":  {
-                                       "y":  10,
-                                       "w":  12,
-                                       "x":  0,
-                                       "h":  10
-                                   },
-                       "datasource":  {
-                                          "type":  "grafana-postgresql-datasource",
-                                          "uid":  "monitoreo-pg"
-                                      },
-                       "title":  "Republica Dominicana 🇩🇴",
-                       "targets":  [
-                                       {
-                                           "rawSql":  "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"ASMX\" FROM monitoring_results WHERE country = \u0027DO\u0027 AND certification_type = \u0027ASMX\u0027 AND $__timeFilter(created_at) ORDER BY created_at",
-                                           "format":  "time_series",
-                                           "refId":  "A"
-                                       },
-                                       {
-                                           "rawSql":  "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"API\" FROM monitoring_results WHERE country = \u0027DO\u0027 AND certification_type = \u0027NUC\u0027 AND $__timeFilter(created_at) ORDER BY created_at",
-                                           "format":  "time_series",
-                                           "refId":  "B"
-                                       }
-                                   ],
-                       "type":  "timeseries",
-                       "options":  {
-                                       "legend":  {
-                                                      "placement":  "bottom",
-                                                      "calcs":  [
-                                                                    "min",
-                                                                    "max",
-                                                                    "mean",
-                                                                    "lastNotNull"
-                                                                ],
-                                                      "displayMode":  "table"
-                                                  },
-                                       "tooltip":  {
-                                                       "mode":  "multi"
-                                                   }
-                                   }
-                   },
-                   {
-                       "fieldConfig":  {
-                                           "defaults":  {
-                                                            "custom":  {
-                                                                           "fillOpacity":  10,
-                                                                           "thresholdsStyle":  {
-                                                                                                   "mode":  "area"
-                                                                                               },
-                                                                           "showPoints":  "auto",
-                                                                           "drawStyle":  "line",
-                                                                           "lineWidth":  2,
-                                                                           "pointSize":  5
-                                                                       },
-                                                            "decimals":  4,
-                                                            "thresholds":  {
-                                                                               "steps":  [
-                                                                                             {
-                                                                                                 "value":  null,
-                                                                                                 "color":  "transparent"
-                                                                                             },
-                                                                                             {
-                                                                                                 "value":  5,
-                                                                                                 "color":  "rgba(255,0,0,0.15)"
-                                                                                             }
-                                                                                         ],
-                                                                               "mode":  "absolute"
-                                                                           },
-                                                            "unit":  "none"
-                                                        },
-                                           "overrides":  [
-                                                             {
-                                                                 "properties":  [
-                                                                                    {
-                                                                                        "id":  "color",
-                                                                                        "value":  {
-                                                                                                      "mode":  "fixed",
-                                                                                                      "fixedColor":  "#3274D9"
-                                                                                                  }
-                                                                                    }
-                                                                                ],
-                                                                 "matcher":  {
-                                                                                 "id":  "byName",
-                                                                                 "options":  "ASMX"
-                                                                             }
-                                                             },
-                                                             {
-                                                                 "properties":  [
-                                                                                    {
-                                                                                        "id":  "color",
-                                                                                        "value":  {
-                                                                                                      "mode":  "fixed",
-                                                                                                      "fixedColor":  "#E0B400"
-                                                                                                  }
-                                                                                    }
-                                                                                ],
-                                                                 "matcher":  {
-                                                                                 "id":  "byName",
-                                                                                 "options":  "API"
-                                                                             }
-                                                             }
-                                                         ]
-                                       },
-                       "id":  5,
-                       "gridPos":  {
-                                       "y":  10,
-                                       "w":  12,
-                                       "x":  12,
-                                       "h":  10
-                                   },
-                       "datasource":  {
-                                          "type":  "grafana-postgresql-datasource",
-                                          "uid":  "monitoreo-pg"
-                                      },
-                       "title":  "Costa Rica 🇨��",
-                       "targets":  [
-                                       {
-                                           "rawSql":  "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"ASMX\" FROM monitoring_results WHERE country = \u0027CR\u0027 AND certification_type = \u0027ASMX\u0027 AND $__timeFilter(created_at) ORDER BY created_at",
-                                           "format":  "time_series",
-                                           "refId":  "A"
-                                       },
-                                       {
-                                           "rawSql":  "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"API\" FROM monitoring_results WHERE country = \u0027CR\u0027 AND certification_type = \u0027NUC\u0027 AND $__timeFilter(created_at) ORDER BY created_at",
-                                           "format":  "time_series",
-                                           "refId":  "B"
-                                       }
-                                   ],
-                       "type":  "timeseries",
-                       "options":  {
-                                       "legend":  {
-                                                      "placement":  "bottom",
-                                                      "calcs":  [
-                                                                    "min",
-                                                                    "max",
-                                                                    "mean",
-                                                                    "lastNotNull"
-                                                                ],
-                                                      "displayMode":  "table"
-                                                  },
-                                       "tooltip":  {
-                                                       "mode":  "multi"
-                                                   }
-                                   }
-                   }
-               ],
-    "uid":  "monitoreo-unificado",
-    "time":  {
-                 "to":  "now",
-                 "from":  "now-30m"
-             },
-    "editable":  true,
-    "title":  "Monitoreo Unificado - Digifact",
-    "graphTooltip":  1
+  "uid": "monitoreo-dashboard",
+  "title": "Monitoreo Certificacion Digifact",
+  "refresh": "1m",
+  "time": { "from": "now-30m", "to": "now" },
+  "timezone": "America/Guatemala",
+  "schemaVersion": 39,
+  "panels": [
+    {
+      "id": 1,
+      "title": "Guatemala 🇬🇹",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 8, "h": 10 },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "monitoreo-pg" },
+      "targets": [
+        { "refId": "A", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"ASMX\" FROM monitoring_results WHERE country = 'GT' AND certification_type = 'ASMX' AND $__timeFilter(created_at) ORDER BY created_at" },
+        { "refId": "B", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"NUC\" FROM monitoring_results WHERE country = 'GT' AND certification_type = 'NUC' AND $__timeFilter(created_at) ORDER BY created_at" },
+        { "refId": "C", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"API\" FROM monitoring_results WHERE country = 'GT' AND certification_type = 'API' AND $__timeFilter(created_at) ORDER BY created_at" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none", "decimals": 4,
+          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 0, "showPoints": "auto", "pointSize": 5, "thresholdsStyle": { "mode": "area" } },
+          "thresholds": { "mode": "absolute", "steps": [ { "value": null, "color": "transparent" }, { "value": 5, "color": "rgba(255,0,0,0.15)" } ] }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "ASMX" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#3274D9" } }] },
+          { "matcher": { "id": "byName", "options": "NUC" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#E0B400" } }] },
+          { "matcher": { "id": "byName", "options": "API" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#56A64B" } }] }
+        ]
+      },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["min","max","mean","lastNotNull"] }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 2,
+      "title": "El Salvador 🇸🇻",
+      "type": "timeseries",
+      "gridPos": { "x": 8, "y": 0, "w": 8, "h": 10 },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "monitoreo-pg" },
+      "targets": [
+        { "refId": "A", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"ASMX\" FROM monitoring_results WHERE country = 'SV' AND certification_type = 'ASMX' AND $__timeFilter(created_at) ORDER BY created_at" },
+        { "refId": "B", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"NUC\" FROM monitoring_results WHERE country = 'SV' AND certification_type = 'NUC' AND $__timeFilter(created_at) ORDER BY created_at" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none", "decimals": 4,
+          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 0, "showPoints": "auto", "pointSize": 5, "thresholdsStyle": { "mode": "area" } },
+          "thresholds": { "mode": "absolute", "steps": [ { "value": null, "color": "transparent" }, { "value": 5, "color": "rgba(255,0,0,0.15)" } ] }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "ASMX" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#3274D9" } }] },
+          { "matcher": { "id": "byName", "options": "NUC" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#E0B400" } }] }
+        ]
+      },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["min","max","mean","lastNotNull"] }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 3,
+      "title": "Panama 🇵🇦",
+      "type": "timeseries",
+      "gridPos": { "x": 16, "y": 0, "w": 8, "h": 10 },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "monitoreo-pg" },
+      "targets": [
+        { "refId": "A", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"ASMX\" FROM monitoring_results WHERE country = 'PA' AND certification_type = 'ASMX' AND $__timeFilter(created_at) ORDER BY created_at" },
+        { "refId": "B", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"NUC\" FROM monitoring_results WHERE country = 'PA' AND certification_type = 'NUC' AND $__timeFilter(created_at) ORDER BY created_at" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none", "decimals": 4,
+          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 0, "showPoints": "auto", "pointSize": 5, "thresholdsStyle": { "mode": "area" } },
+          "thresholds": { "mode": "absolute", "steps": [ { "value": null, "color": "transparent" }, { "value": 5, "color": "rgba(255,0,0,0.15)" } ] }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "ASMX" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#3274D9" } }] },
+          { "matcher": { "id": "byName", "options": "NUC" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#E0B400" } }] }
+        ]
+      },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["min","max","mean","lastNotNull"] }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 4,
+      "title": "Republica Dominicana 🇩🇴",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 10, "w": 12, "h": 10 },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "monitoreo-pg" },
+      "targets": [
+        { "refId": "A", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"ASMX\" FROM monitoring_results WHERE country = 'DO' AND certification_type = 'ASMX' AND $__timeFilter(created_at) ORDER BY created_at" },
+        { "refId": "B", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"NUC\" FROM monitoring_results WHERE country = 'DO' AND certification_type = 'NUC' AND $__timeFilter(created_at) ORDER BY created_at" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none", "decimals": 4,
+          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 0, "showPoints": "auto", "pointSize": 5, "thresholdsStyle": { "mode": "area" } },
+          "thresholds": { "mode": "absolute", "steps": [ { "value": null, "color": "transparent" }, { "value": 5, "color": "rgba(255,0,0,0.15)" } ] }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "ASMX" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#3274D9" } }] },
+          { "matcher": { "id": "byName", "options": "NUC" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#E0B400" } }] }
+        ]
+      },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["min","max","mean","lastNotNull"] }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 5,
+      "title": "Costa Rica 🇨🇷",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 10, "w": 12, "h": 10 },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "monitoreo-pg" },
+      "targets": [
+        { "refId": "A", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"ASMX\" FROM monitoring_results WHERE country = 'CR' AND certification_type = 'ASMX' AND $__timeFilter(created_at) ORDER BY created_at" },
+        { "refId": "B", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"NUC\" FROM monitoring_results WHERE country = 'CR' AND certification_type = 'NUC' AND $__timeFilter(created_at) ORDER BY created_at" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none", "decimals": 4,
+          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 0, "showPoints": "auto", "pointSize": 5, "thresholdsStyle": { "mode": "area" } },
+          "thresholds": { "mode": "absolute", "steps": [ { "value": null, "color": "transparent" }, { "value": 5, "color": "rgba(255,0,0,0.15)" } ] }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "ASMX" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#3274D9" } }] },
+          { "matcher": { "id": "byName", "options": "NUC" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#E0B400" } }] }
+        ]
+      },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["min","max","mean","lastNotNull"] }, "tooltip": { "mode": "multi" } }
+    }
+  ]
 }

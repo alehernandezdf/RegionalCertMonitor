@@ -4,5 +4,6 @@ namespace Monitoreo.Worker.Models;
 public enum CertificationType
 {
     ASMX,
-    NUC
+    NUC,
+    API
 }

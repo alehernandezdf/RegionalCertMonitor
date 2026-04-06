@@ -7,6 +7,7 @@ RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
 
 FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS runtime
 WORKDIR /app
+RUN apk add --no-cache tzdata
 COPY --from=build /app/publish .
 ENV DOTNET_ENVIRONMENT=Development
 ENTRYPOINT ["dotnet", "Monitoreo.Worker.dll"]

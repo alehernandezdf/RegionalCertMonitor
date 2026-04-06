@@ -76,7 +76,7 @@
                 <!-- <Code Data="UnidadCPBS" Value="cm"/> -->
                 <Code Name="CodCPBSabr" Value="13"></Code>
             </Codes>
-            <Description>ITEM</Description> <!-- dDescProd -->
+            <Description>certificacion unificada</Description> <!-- dDescProd -->
             <Qty>1.00</Qty> <!-- dCantCodInt -->
             <UnitOfMeasure>m</UnitOfMeasure> <!-- cUnidad -->
             <Price>1.000000</Price> <!-- dPrUnit -->

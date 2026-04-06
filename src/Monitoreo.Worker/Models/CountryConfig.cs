@@ -39,6 +39,21 @@ public record CountryConfig
     // CUFE Generation (PA)
     public bool RequiresCufe { get; init; }
 
+    // API FEL (GT)
+    public bool ApiEnabled { get; init; }
+    public string? ApiEndpoint { get; init; }
+    public string? ApiLoginEndpoint { get; init; }
+    public string? ApiTransactionType { get; init; }
+    public string? ApiUsernameParam { get; init; }
+    public string? ApiResponseFormat { get; init; } // "XML" o "JSON"
+
+    // ASMX transaction type (varía por país)
+    public string AsmxTransactionType { get; init; } = "CERTIFICATE_FE";
+    public string? AsmxUsernameFormat { get; init; }
+
+    // Timezone por país
+    public string TimeZoneId { get; init; } = "America/Guatemala";
+
     // Notifications — Email
     public IReadOnlyList<string> EmailRecipients { get; init; } = [];
     public bool NotificationsEmailEnabled { get; init; } = true;

@@ -109,8 +109,10 @@ try
     builder.Services.AddSingleton<IAsmxPreProcessingPipeline, AsmxPreProcessingPipeline>();
     builder.Services.AddSingleton<AsmxCertificationService>();
     builder.Services.AddSingleton<NucCertificationService>();
+    builder.Services.AddSingleton<ApiFelCertificationService>();
     builder.Services.AddSingleton<ICertificationService>(sp => sp.GetRequiredService<AsmxCertificationService>());
     builder.Services.AddSingleton<ICertificationService>(sp => sp.GetRequiredService<NucCertificationService>());
+    builder.Services.AddSingleton<ICertificationService>(sp => sp.GetRequiredService<ApiFelCertificationService>());
 
     // Orchestration
     builder.Services.AddSingleton<IMonitoringOrchestrator, MonitoringOrchestrator>();
