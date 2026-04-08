@@ -42,7 +42,7 @@ public class AsmxCertificationService : ICertificationService
             var client = _httpClientFactory.CreateClient("AsmxClient");
             var content = new StringContent(soapEnvelope, System.Text.Encoding.UTF8, "text/xml");
 
-            var soapAction = config.CountryCode == "GT"
+            var soapAction = config.CountryCode.StartsWith("GT")
                 ? "http://www.fact.com.mx/schema/ws/RequestTransaction"
                 : "https://corec.digifact.com/schema/ws/RequestTransaction";
             content.Headers.Add("SOAPAction", soapAction);
@@ -86,11 +86,12 @@ public class AsmxCertificationService : ICertificationService
                 .Replace("{NucUsername}", config.NucUsername)
             : $"{config.CountryCode}.{config.TaxId}.{config.NucUsername}";
 
+        var actualCountry = config.CountryCode.StartsWith("GT") ? "GT" : config.CountryCode;
         var transaction = config.AsmxTransactionType;
-        var soapAction = config.CountryCode == "GT"
+        var soapAction = actualCountry == "GT"
             ? "http://www.fact.com.mx/schema/ws/RequestTransaction"
             : "https://corec.digifact.com/schema/ws/RequestTransaction";
-        var wsNamespace = config.CountryCode == "GT"
+        var wsNamespace = actualCountry == "GT"
             ? "http://www.fact.com.mx/schema/ws"
             : "https://corec.digifact.com/schema/ws";
 
@@ -100,7 +101,7 @@ public class AsmxCertificationService : ICertificationService
     <ws:RequestTransaction>
       <ws:Requestor>{config.Requestor}</ws:Requestor>
       <ws:Transaction>{transaction}</ws:Transaction>
-      <ws:Country>{config.CountryCode}</ws:Country>
+      <ws:Country>{actualCountry}</ws:Country>
       <ws:Entity>{config.TaxId}</ws:Entity>
       <ws:User>{config.Requestor}</ws:User>
       <ws:UserName>{username}</ws:UserName>
@@ -142,7 +143,7 @@ public class AsmxCertificationService : ICertificationService
         var doc = XDocument.Parse(xml);
         var now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("America/Guatemala"));
 
-        if (config.CountryCode == "GT")
+        if (config.CountryCode.StartsWith("GT"))
         {
             // GT: solo actualizar FechaHoraEmision en namespace dte:
             XNamespace dte = "http://www.sat.gob.gt/dte/fel/0.2.0";
