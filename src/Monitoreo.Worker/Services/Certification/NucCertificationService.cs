@@ -108,6 +108,11 @@ public class NucCertificationService : ICertificationService
         return secret.SecretString;
     }
 
+    // BEGIN-FIX::BE-660::2026-04-08::AHL::Circuit breaker de login NUC para evitar bloqueo de cuenta por intentos fallidos
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, (int FailCount, DateTimeOffset BlockedUntil)> _loginFailures = new();
+    private const int MaxLoginFailures = 2;
+    private static readonly TimeSpan LoginBlockDuration = TimeSpan.FromMinutes(30);
+
     private async Task<string> GetCachedTokenAsync(CountryConfig config, CancellationToken ct)
     {
         if (_tokenCache.TryGetValue(config.CountryCode, out var cached) && cached.Expiry > DateTimeOffset.UtcNow)
@@ -117,10 +122,40 @@ public class NucCertificationService : ICertificationService
             return cached.Token;
         }
 
-        var token = await LoginAndGetTokenAsync(config, ct);
-        _tokenCache[config.CountryCode] = (token, DateTimeOffset.UtcNow.Add(TokenCacheDuration));
-        return token;
+        // Verificar si el login está bloqueado por intentos fallidos
+        if (_loginFailures.TryGetValue(config.CountryCode, out var failure) && failure.BlockedUntil > DateTimeOffset.UtcNow)
+        {
+            var remaining = (failure.BlockedUntil - DateTimeOffset.UtcNow).TotalMinutes;
+            _logger.LogWarning("NUC {Country} LOGIN BLOQUEADO por {Min:F0} min mas (evitar bloqueo de cuenta, {Fails} intentos fallidos)",
+                config.CountryCode, remaining, failure.FailCount);
+            throw new InvalidOperationException($"Login NUC {config.CountryCode} bloqueado por {remaining:F0} min para evitar bloqueo de cuenta");
+        }
+
+        try
+        {
+            var token = await LoginAndGetTokenAsync(config, ct);
+            _loginFailures.TryRemove(config.CountryCode, out _);
+            _tokenCache[config.CountryCode] = (token, DateTimeOffset.UtcNow.Add(TokenCacheDuration));
+            return token;
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            var current = _loginFailures.GetOrAdd(config.CountryCode, _ => (0, DateTimeOffset.MinValue));
+            var newCount = current.FailCount + 1;
+            var blockedUntil = newCount >= MaxLoginFailures ? DateTimeOffset.UtcNow.Add(LoginBlockDuration) : DateTimeOffset.MinValue;
+            _loginFailures[config.CountryCode] = (newCount, blockedUntil);
+
+            if (newCount >= MaxLoginFailures)
+                _logger.LogError("NUC {Country} LOGIN BLOQUEADO: {Fails} intentos fallidos con 401. No se reintentara por {Min} min para evitar bloqueo de cuenta",
+                    config.CountryCode, newCount, LoginBlockDuration.TotalMinutes);
+            else
+                _logger.LogWarning("NUC {Country} LOGIN fallido ({Fails}/{Max}): 401 Unauthorized",
+                    config.CountryCode, newCount, MaxLoginFailures);
+
+            throw;
+        }
     }
+    // END-FIX::BE-660::2026-04-08::AHL::Circuit breaker de login NUC para evitar bloqueo de cuenta por intentos fallidos
 
     private async Task<string> LoginAndGetTokenAsync(CountryConfig config, CancellationToken ct)
     {
