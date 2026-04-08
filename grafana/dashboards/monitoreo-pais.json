@@ -1,0 +1,31 @@
+{
+  "uid": "monitoreo-pais-dashboard",
+  "title": "Monitoreo Dominios .pais",
+  "refresh": "1m",
+  "time": { "from": "now-30m", "to": "now" },
+  "timezone": "America/Guatemala",
+  "schemaVersion": 39,
+  "panels": [
+    {
+      "id": 1,
+      "title": "Guatemala .com.gt",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 12 },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "monitoreo-pg" },
+      "targets": [
+        { "refId": "A", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"ASMX\" FROM monitoring_results WHERE country = 'GT2' AND certification_type = 'ASMX' AND $__timeFilter(created_at) ORDER BY created_at" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none", "decimals": 4,
+          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 0, "showPoints": "auto", "pointSize": 5, "thresholdsStyle": { "mode": "area" } },
+          "thresholds": { "mode": "absolute", "steps": [ { "value": null, "color": "transparent" }, { "value": 5, "color": "rgba(255,0,0,0.15)" } ] }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "ASMX" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#3274D9" } }] }
+        ]
+      },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["min","max","mean","lastNotNull"] }, "tooltip": { "mode": "multi" } }
+    }
+  ]
+}
