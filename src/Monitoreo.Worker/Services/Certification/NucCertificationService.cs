@@ -239,55 +239,42 @@ public class NucCertificationService : ICertificationService
             ErrorMessage: isSuccess ? null : $"Code={code}, Message={message}, Desc={description?[..Math.Min(200, description?.Length ?? 0)]}");
     }
 
-    // BEGIN-FEAT::BE-675::2026-03-31::AHL::Inyección dinámica de campos NUC: fecha, consecutivo, NumeroDF, CodigoSeguridad y referencia interna
+    // BEGIN-REFACTOR::BE-660::2026-04-09::AHL::Optimizar InjectNucDynamicFields con Regex en vez de XDocument para reducir latencia
+    private static readonly System.Text.RegularExpressions.Regex _issuedDateTimeRegex = new(@"<IssuedDateTime>[^<]+</IssuedDateTime>", System.Text.RegularExpressions.RegexOptions.Compiled);
+    private static readonly System.Text.RegularExpressions.Regex _guidRegex = new(@"<GUID>[^<]+</GUID>", System.Text.RegularExpressions.RegexOptions.Compiled);
+    private static readonly System.Text.RegularExpressions.Regex _consecutivoAttrRegex = new(@"(Name=""(?:Consecutivo|Secuencia)""\s+Value="")[^""]+("")", System.Text.RegularExpressions.RegexOptions.Compiled);
+    private static readonly System.Text.RegularExpressions.Regex _secuencialAttrRegex = new(@"(Name=""Secuencial""\s+Value="")[^""]+("")", System.Text.RegularExpressions.RegexOptions.Compiled);
+    private static readonly System.Text.RegularExpressions.Regex _numeroDFAttrRegex = new(@"(Name=""NumeroDF""\s+Value="")[^""]+("")", System.Text.RegularExpressions.RegexOptions.Compiled);
+    private static readonly System.Text.RegularExpressions.Regex _codigoSeguridadAttrRegex = new(@"(Name=""CodigoSeguridad""\s+Value="")[^""]+("")", System.Text.RegularExpressions.RegexOptions.Compiled);
+
     private static string InjectNucDynamicFields(string xml, CountryConfig config, long consecutivo)
     {
-        var doc = XDocument.Parse(xml);
         var gtNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("America/Guatemala"));
+        var dateStr = gtNow.ToString("yyyy-MM-ddTHH:mm:ss-06:00");
 
-        // Buscar IssuedDateTime en cualquier nivel
-        var issued = doc.Descendants("IssuedDateTime").FirstOrDefault();
-        if (issued != null)
-            issued.Value = gtNow.ToString("yyyy-MM-ddTHH:mm:ss-06:00");
+        // Fecha
+        xml = _issuedDateTimeRegex.Replace(xml, $"<IssuedDateTime>{dateStr}</IssuedDateTime>");
 
-        // GUID dinámico para SV (evitar duplicados)
-        var guidNode = doc.Descendants("GUID").FirstOrDefault();
-        if (guidNode != null)
-            guidNode.Value = Guid.NewGuid().ToString().ToUpper();
+        // GUID dinámico (SV)
+        if (xml.Contains("<GUID>"))
+            xml = _guidRegex.Replace(xml, $"<GUID>{Guid.NewGuid().ToString().ToUpper()}</GUID>");
 
-        // Buscar Consecutivo o Secuencia como atributo Value en nodo Info
-        var infoNodes = doc.Descendants("Info").ToList();
-        foreach (var info in infoNodes)
+        // Consecutivo/Secuencia (10 dígitos)
+        xml = _consecutivoAttrRegex.Replace(xml, $"${{1}}{(9900000 + consecutivo).ToString("D10")}${{2}}");
+
+        // Secuencial SV (15 dígitos)
+        xml = _secuencialAttrRegex.Replace(xml, $"${{1}}{(400000000000 + consecutivo).ToString("D15")}${{2}}");
+
+        // NumeroDF y CodigoSeguridad solo PA
+        if (config.CountryCode == "PA")
         {
-            var name = info.Attribute("Name")?.Value;
-            if (name == "Consecutivo" || name == "Secuencia")
-            {
-                info.SetAttributeValue("Value", (9900000 + consecutivo).ToString("D10"));
-            }
-            // SV usa Secuencial con 15 dígitos, base 400000000000
-            else if (name == "Secuencial")
-            {
-                info.SetAttributeValue("Value", (400000000000 + consecutivo).ToString("D15"));
-            }
-            // NumeroDF y CodigoSeguridad dinámicos solo para PA (evitar romper Clave de CR)
-            else if (name == "NumeroDF" && config.CountryCode == "PA")
-            {
-                info.SetAttributeValue("Value", (1140000000 + consecutivo).ToString());
-            }
-            else if (name == "CodigoSeguridad" && config.CountryCode == "PA")
-            {
-                info.SetAttributeValue("Value", (800000 + consecutivo).ToString("D9"));
-            }
+            xml = _numeroDFAttrRegex.Replace(xml, $"${{1}}{(1140000000 + consecutivo)}${{2}}");
+            xml = _codigoSeguridadAttrRegex.Replace(xml, $"${{1}}{(800000 + consecutivo).ToString("D9")}${{2}}");
         }
 
-        // Fallback: buscar como elemento <Consecutivo>
-        var consec = doc.Descendants("Consecutivo").FirstOrDefault();
-        if (consec != null)
-            consec.Value = consecutivo.ToString("D10");
-
-        return doc.ToString();
+        return xml;
     }
-    // END-FEAT::BE-675::2026-03-31::AHL::Inyección dinámica de campos NUC: fecha, consecutivo, NumeroDF, CodigoSeguridad y referencia interna
+    // END-REFACTOR::BE-660::2026-04-09::AHL::Optimizar InjectNucDynamicFields con Regex en vez de XDocument para reducir latencia
 
     private record NucResponse(bool Success, string? ErrorMessage);
 }
