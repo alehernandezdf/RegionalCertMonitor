@@ -10,7 +10,7 @@
       "id": 1,
       "title": "Guatemala 🇬🇹",
       "type": "timeseries",
-      "gridPos": { "x": 0, "y": 0, "w": 8, "h": 13 },
+      "gridPos": { "x": 0, "y": 0, "w": 8, "h": 11 },
       "datasource": { "type": "grafana-postgresql-datasource", "uid": "monitoreo-pg" },
       "targets": [
         { "refId": "A", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"ASMX\" FROM monitoring_results WHERE country = 'GT' AND certification_type = 'ASMX' AND $__timeFilter(created_at) ORDER BY created_at" },
@@ -35,7 +35,7 @@
       "id": 2,
       "title": "El Salvador 🇸🇻",
       "type": "timeseries",
-      "gridPos": { "x": 8, "y": 0, "w": 8, "h": 13 },
+      "gridPos": { "x": 8, "y": 0, "w": 8, "h": 11 },
       "datasource": { "type": "grafana-postgresql-datasource", "uid": "monitoreo-pg" },
       "targets": [
         { "refId": "A", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"ASMX\" FROM monitoring_results WHERE country = 'SV' AND certification_type = 'ASMX' AND $__timeFilter(created_at) ORDER BY created_at" },
@@ -58,7 +58,7 @@
       "id": 3,
       "title": "Panama 🇵🇦",
       "type": "timeseries",
-      "gridPos": { "x": 16, "y": 0, "w": 8, "h": 13 },
+      "gridPos": { "x": 16, "y": 0, "w": 8, "h": 11 },
       "datasource": { "type": "grafana-postgresql-datasource", "uid": "monitoreo-pg" },
       "targets": [
         { "refId": "A", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"ASMX\" FROM monitoring_results WHERE country = 'PA' AND certification_type = 'ASMX' AND $__timeFilter(created_at) ORDER BY created_at" },
@@ -81,7 +81,7 @@
       "id": 4,
       "title": "Republica Dominicana 🇩🇴",
       "type": "timeseries",
-      "gridPos": { "x": 0, "y": 13, "w": 12, "h": 13 },
+      "gridPos": { "x": 0, "y": 11, "w": 12, "h": 11 },
       "datasource": { "type": "grafana-postgresql-datasource", "uid": "monitoreo-pg" },
       "targets": [
         { "refId": "A", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"ASMX\" FROM monitoring_results WHERE country = 'DO' AND certification_type = 'ASMX' AND $__timeFilter(created_at) ORDER BY created_at" },
@@ -104,7 +104,7 @@
       "id": 5,
       "title": "Costa Rica 🇨🇷",
       "type": "timeseries",
-      "gridPos": { "x": 12, "y": 13, "w": 12, "h": 13 },
+      "gridPos": { "x": 12, "y": 11, "w": 12, "h": 11 },
       "datasource": { "type": "grafana-postgresql-datasource", "uid": "monitoreo-pg" },
       "targets": [
         { "refId": "A", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"ASMX\" FROM monitoring_results WHERE country = 'CR' AND certification_type = 'ASMX' AND $__timeFilter(created_at) ORDER BY created_at" },
