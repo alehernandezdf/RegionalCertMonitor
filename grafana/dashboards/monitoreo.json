@@ -133,7 +133,7 @@
         {
           "refId": "A",
           "format": "table",
-          "rawSql": "SELECT (created_at AT TIME ZONE 'America/Guatemala')::time(0) AS \"Hora\", country AS \"País\", certification_type AS \"Tipo\", LEFT(COALESCE(event_error_message, ''), 60) AS \"Error\" FROM monitoring_results WHERE result_status = false AND event_error_message IS NOT NULL AND country = 'GT' ORDER BY created_at DESC LIMIT 8"
+          "rawSql": "SELECT to_char((created_at AT TIME ZONE 'America/Guatemala'), 'DD/MM HH24:MI:SS') AS \"Fecha/Hora\", country AS \"País\", certification_type AS \"Tipo\", LEFT(COALESCE(event_error_message, ''), 60) AS \"Error\" FROM monitoring_results WHERE result_status = false AND event_error_message IS NOT NULL AND country = 'GT' ORDER BY created_at DESC LIMIT 8"
         }
       ],
       "fieldConfig": {
@@ -142,7 +142,7 @@
           "color": { "mode": "fixed", "fixedColor": "red" }
         },
         "overrides": [
-          { "matcher": { "id": "byName", "options": "Hora" }, "properties": [{ "id": "custom.width", "value": 70 }] },
+          { "matcher": { "id": "byName", "options": "Fecha/Hora" }, "properties": [{ "id": "custom.width", "value": 100 }] },
           { "matcher": { "id": "byName", "options": "País" }, "properties": [{ "id": "custom.width", "value": 40 }] },
           { "matcher": { "id": "byName", "options": "Tipo" }, "properties": [{ "id": "custom.width", "value": 50 }] },
           { "matcher": { "id": "byName", "options": "Error" }, "properties": [{ "id": "custom.cellOptions", "value": { "type": "auto", "wrapText": false } }] }
