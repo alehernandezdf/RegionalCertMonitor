@@ -174,15 +174,27 @@ public class NucCertificationService : ICertificationService
         var loginBody = await loginResponse.Content.ReadAsStringAsync(ct);
 
         _logger.LogDebug("NUC {Country} LOGIN response: {Body}", config.CountryCode, loginBody[..Math.Min(200, loginBody.Length)]);
-        using var doc = JsonDocument.Parse(loginBody);
 
-        // El API de Digifact retorna "Token" con T mayuscula
-        if (doc.RootElement.TryGetProperty("Token", out var tokenProp))
-            return tokenProp.GetString() ?? throw new InvalidOperationException("Token vacio en respuesta de login NUC");
-        if (doc.RootElement.TryGetProperty("token", out var tokenLower))
-            return tokenLower.GetString() ?? throw new InvalidOperationException("Token vacio en respuesta de login NUC");
+        JsonDocument doc;
+        try
+        {
+            doc = JsonDocument.Parse(loginBody);
+        }
+        catch (JsonException)
+        {
+            throw new InvalidOperationException(
+                $"Respuesta no-JSON en login NUC {config.CountryCode} (HTTP {loginResponse.StatusCode}): {loginBody[..Math.Min(300, loginBody.Length)]}");
+        }
+        using (doc)
+        {
+            // El API de Digifact retorna "Token" con T mayuscula
+            if (doc.RootElement.TryGetProperty("Token", out var tokenProp))
+                return tokenProp.GetString() ?? throw new InvalidOperationException("Token vacio en respuesta de login NUC");
+            if (doc.RootElement.TryGetProperty("token", out var tokenLower))
+                return tokenLower.GetString() ?? throw new InvalidOperationException("Token vacio en respuesta de login NUC");
 
-        throw new InvalidOperationException($"Token no encontrado en respuesta de login NUC: {loginBody[..Math.Min(200, loginBody.Length)]}");
+            throw new InvalidOperationException($"Token no encontrado en respuesta de login NUC: {loginBody[..Math.Min(200, loginBody.Length)]}");
+        }
     }
 
     internal static string BuildNucUsername(CountryConfig config)
@@ -213,30 +225,44 @@ public class NucCertificationService : ICertificationService
         _logger.LogDebug("NUC {Country} CERT response ({StatusCode}):\n{Body}",
             config.CountryCode, response.StatusCode, body[..Math.Min(500, body.Length)]);
 
-        using var doc = JsonDocument.Parse(body);
-        var root = doc.RootElement;
-
-        var code = "-1";
-        if (root.TryGetProperty("code", out var c))
+        JsonDocument doc;
+        try
         {
-            code = c.ValueKind == System.Text.Json.JsonValueKind.Number
-                ? c.GetInt32().ToString()
-                : c.GetString() ?? "-1";
+            doc = JsonDocument.Parse(body);
         }
-        var message = root.TryGetProperty("message", out var m) ? m.GetString() : null;
-
-        string? description = null;
-        if (root.TryGetProperty("description", out var d))
+        catch (JsonException)
         {
-            description = d.ValueKind == System.Text.Json.JsonValueKind.Array
-                ? string.Join(" ", d.EnumerateArray().Select(e => e.GetString()))
-                : d.GetString();
+            return new NucResponse(
+                Success: false,
+                ErrorMessage: $"Respuesta no-JSON del servicio NUC (HTTP {response.StatusCode}): {body[..Math.Min(300, body.Length)]}");
         }
 
-        var isSuccess = code == "1";
-        return new NucResponse(
-            Success: isSuccess,
-            ErrorMessage: isSuccess ? null : $"Code={code}, Message={message}, Desc={description?[..Math.Min(200, description?.Length ?? 0)]}");
+        using (doc)
+        {
+            var root = doc.RootElement;
+
+            var code = "-1";
+            if (root.TryGetProperty("code", out var c))
+            {
+                code = c.ValueKind == System.Text.Json.JsonValueKind.Number
+                    ? c.GetInt32().ToString()
+                    : c.GetString() ?? "-1";
+            }
+            var message = root.TryGetProperty("message", out var m) ? m.GetString() : null;
+
+            string? description = null;
+            if (root.TryGetProperty("description", out var d))
+            {
+                description = d.ValueKind == System.Text.Json.JsonValueKind.Array
+                    ? string.Join(" ", d.EnumerateArray().Select(e => e.GetString()))
+                    : d.GetString();
+            }
+
+            var isSuccess = code == "1";
+            return new NucResponse(
+                Success: isSuccess,
+                ErrorMessage: isSuccess ? null : $"Code={code}, Message={message}, Desc={description?[..Math.Min(200, description?.Length ?? 0)]}");
+        }
     }
 
     // BEGIN-REFACTOR::BE-660::2026-04-09::AHL::Optimizar InjectNucDynamicFields con Regex en vez de XDocument para reducir latencia
