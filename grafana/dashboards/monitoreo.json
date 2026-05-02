@@ -81,7 +81,7 @@
       "id": 4,
       "title": "Republica Dominicana 🇩🇴",
       "type": "timeseries",
-      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "gridPos": { "x": 0, "y": 8, "w": 8, "h": 8 },
       "datasource": { "type": "grafana-postgresql-datasource", "uid": "monitoreo-pg" },
       "targets": [
         { "refId": "A", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"ASMX\" FROM monitoring_results WHERE country = 'DO' AND certification_type = 'ASMX' AND $__timeFilter(created_at) ORDER BY created_at" },
@@ -104,7 +104,7 @@
       "id": 5,
       "title": "Costa Rica 🇨🇷",
       "type": "timeseries",
-      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "gridPos": { "x": 8, "y": 8, "w": 8, "h": 8 },
       "datasource": { "type": "grafana-postgresql-datasource", "uid": "monitoreo-pg" },
       "targets": [
         { "refId": "A", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"ASMX\" FROM monitoring_results WHERE country = 'CR' AND certification_type = 'ASMX' AND $__timeFilter(created_at) ORDER BY created_at" },
@@ -122,6 +122,39 @@
         ]
       },
       "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["min","max","mean","lastNotNull"] }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 6,
+      "title": "⚠️ Últimos Errores GT 🇬🇹",
+      "type": "table",
+      "gridPos": { "x": 16, "y": 8, "w": 8, "h": 8 },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "monitoreo-pg" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawSql": "SELECT (created_at AT TIME ZONE 'America/Guatemala')::time(0) AS \"Hora\", country AS \"País\", certification_type AS \"Tipo\", LEFT(COALESCE(event_error_message, ''), 60) AS \"Error\" FROM monitoring_results WHERE result_status = false AND event_error_message IS NOT NULL AND country = 'GT' ORDER BY created_at DESC LIMIT 8"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "align": "left", "cellOptions": { "type": "auto" }, "inspect": false },
+          "color": { "mode": "fixed", "fixedColor": "red" }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Hora" }, "properties": [{ "id": "custom.width", "value": 70 }] },
+          { "matcher": { "id": "byName", "options": "País" }, "properties": [{ "id": "custom.width", "value": 40 }] },
+          { "matcher": { "id": "byName", "options": "Tipo" }, "properties": [{ "id": "custom.width", "value": 50 }] },
+          { "matcher": { "id": "byName", "options": "Error" }, "properties": [{ "id": "custom.cellOptions", "value": { "type": "auto", "wrapText": false } }] }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [{ "displayName": "Hora", "desc": true }],
+        "footer": { "show": false },
+        "frameIndex": 0
+      },
+      "transformations": []
     }
   ]
 }
