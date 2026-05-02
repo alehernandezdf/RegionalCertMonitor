@@ -9,6 +9,9 @@ public class CountryWorkerRegistrar : BackgroundService
     private readonly IMonitoringOrchestrator _orchestrator;
     private readonly ILogger<CountryWorkerRegistrar> _logger;
     private readonly List<Task> _workerTasks = [];
+    // BEGIN-FIX::BE-672::2026-05-01::AHL::SemaphoreSlim por pais para evitar solapamiento de ciclos que genera ceros falsos
+    private readonly Dictionary<string, SemaphoreSlim> _cycleGuards = [];
+    // END-FIX::BE-672::2026-05-01::AHL::SemaphoreSlim por pais para evitar solapamiento de ciclos que genera ceros falsos
 
     public CountryWorkerRegistrar(
         Services.Configuration.IConfigurationProvider configProvider,
@@ -27,6 +30,11 @@ public class CountryWorkerRegistrar : BackgroundService
 
         _logger.LogInformation("Paises habilitados: {Countries}",
             string.Join(", ", enabled.Select(c => c.CountryCode)));
+
+        // BEGIN-FIX::BE-672::2026-05-01::AHL::Crear semaforo por pais para evitar solapamiento
+        foreach (var country in enabled)
+            _cycleGuards[country.CountryCode] = new SemaphoreSlim(1, 1);
+        // END-FIX::BE-672::2026-05-01::AHL::Crear semaforo por pais para evitar solapamiento
 
         foreach (var country in enabled)
         {
@@ -55,6 +63,14 @@ public class CountryWorkerRegistrar : BackgroundService
 
     private async Task RunCycleAsync(string countryCode, CancellationToken ct)
     {
+        // BEGIN-FIX::BE-672::2026-05-01::AHL::Si el ciclo anterior sigue corriendo, saltar este tick para evitar ceros falsos
+        var guard = _cycleGuards[countryCode];
+        if (!await guard.WaitAsync(0, ct))
+        {
+            _logger.LogWarning("Worker {Country}: ciclo anterior aun en ejecucion, saltando tick", countryCode);
+            return;
+        }
+        // END-FIX::BE-672::2026-05-01::AHL::Si el ciclo anterior sigue corriendo, saltar este tick para evitar ceros falsos
         try
         {
             var config = await _configProvider.LoadCountryAsync(countryCode, ct);
@@ -63,6 +79,10 @@ public class CountryWorkerRegistrar : BackgroundService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error en ciclo de monitoreo para {Country}", countryCode);
+        }
+        finally
+        {
+            guard.Release();
         }
     }
 }
