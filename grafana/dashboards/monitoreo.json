@@ -133,7 +133,7 @@
         {
           "refId": "A",
           "format": "table",
-          "rawSql": "SELECT to_char((created_at AT TIME ZONE 'America/Guatemala'), 'DD/MM HH24:MI:SS') AS \"Fecha/Hora\", country AS \"País\", certification_type AS \"Tipo\", LEFT(COALESCE(event_error_message, ''), 60) AS \"Error\" FROM monitoring_results WHERE result_status = false AND event_error_message IS NOT NULL AND country = 'GT' ORDER BY created_at DESC LIMIT 8"
+          "rawSql": "SELECT to_char((created_at AT TIME ZONE 'America/Guatemala'), 'DD/MM HH24:MI:SS') AS \"Fecha/Hora\", country AS \"País\", certification_type AS \"Tipo\", LEFT(COALESCE(event_error_message, ''), 60) AS \"Error\" FROM monitoring_results WHERE result_status = false AND transaction_time_ms = 0 AND country = 'GT' ORDER BY created_at DESC LIMIT 8"
         }
       ],
       "fieldConfig": {
