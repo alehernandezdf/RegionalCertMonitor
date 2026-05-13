@@ -61,22 +61,20 @@ public class NucCertificationService : ICertificationService
                 path => File.ReadAllText(path));
             var xml = InjectNucDynamicFields(templateXml, config, consecutivo);
 
-            // Medir SOLO la llamada HTTP de certificacion, sin login ni preparacion
-            var sw = Stopwatch.StartNew();
+            // El tiempo se mide DENTRO de CertifyWithTokenAsync (solo PostAsync + ReadResponse, igual al monitoreo viejo)
             var response = await CertifyWithTokenAsync(config.NucCertEndpoint, token, xml, config, ct);
-            sw.Stop();
 
             _logger.LogInformation(
                 "NUC {Country} #{Consecutivo} ({AuthMode}): {Status} en {TimeMs}ms",
                 config.CountryCode, consecutivo, config.NucAuthMode,
-                response.Success ? "OK" : "FAIL", sw.ElapsedMilliseconds);
+                response.Success ? "OK" : "FAIL", response.ElapsedMs);
 
             return new MonitoringResult(
                 Id: Guid.NewGuid(),
                 Country: config.CountryCode,
                 CertificationType: CertificationType.NUC,
                 Endpoint: config.NucCertEndpoint,
-                TransactionTimeMs: sw.ElapsedMilliseconds,
+                TransactionTimeMs: response.ElapsedMs,
                 ResultStatus: response.Success,
                 EventErrorMessage: response.Success ? null : response.ErrorMessage,
                 CreatedAt: DateTimeOffset.UtcNow);
@@ -219,8 +217,13 @@ public class NucCertificationService : ICertificationService
 
         _logger.LogDebug("NUC {Country} CERT request: {Url}\n{Xml}", config.CountryCode, url, xml[..Math.Min(500, xml.Length)]);
 
+        // BEGIN-FIX::BE-672::2026-05-13::AHL::Medir SOLO la transaccion HTTP (PostAsync + ReadResponse), igual al monitoreo viejo. Excluye creacion de HttpClient, parsing JSON, etc.
+        var sw = Stopwatch.StartNew();
         var response = await client.PostAsync(url, content, ct);
         var body = await response.Content.ReadAsStringAsync(ct);
+        sw.Stop();
+        var elapsedMs = sw.ElapsedMilliseconds;
+        // END-FIX::BE-672::2026-05-13::AHL
 
         _logger.LogDebug("NUC {Country} CERT response ({StatusCode}):\n{Body}",
             config.CountryCode, response.StatusCode, body[..Math.Min(500, body.Length)]);
@@ -234,7 +237,8 @@ public class NucCertificationService : ICertificationService
         {
             return new NucResponse(
                 Success: false,
-                ErrorMessage: $"Respuesta no-JSON del servicio NUC (HTTP {response.StatusCode}): {body[..Math.Min(300, body.Length)]}");
+                ErrorMessage: $"Respuesta no-JSON del servicio NUC (HTTP {response.StatusCode}): {body[..Math.Min(300, body.Length)]}",
+                ElapsedMs: elapsedMs);
         }
 
         using (doc)
@@ -261,7 +265,8 @@ public class NucCertificationService : ICertificationService
             var isSuccess = code == "1";
             return new NucResponse(
                 Success: isSuccess,
-                ErrorMessage: isSuccess ? null : $"Code={code}, Message={message}, Desc={description?[..Math.Min(200, description?.Length ?? 0)]}");
+                ErrorMessage: isSuccess ? null : $"Code={code}, Message={message}, Desc={description?[..Math.Min(200, description?.Length ?? 0)]}",
+                ElapsedMs: elapsedMs);
         }
     }
 
@@ -302,6 +307,6 @@ public class NucCertificationService : ICertificationService
     }
     // END-REFACTOR::BE-660::2026-04-09::AHL::Optimizar InjectNucDynamicFields con Regex en vez de XDocument para reducir latencia
 
-    private record NucResponse(bool Success, string? ErrorMessage);
+    private record NucResponse(bool Success, string? ErrorMessage, long ElapsedMs = 0);
 }
 // END-FEAT::BE-663::2026-03-17::AHL::Servicio de certificación NUC REST con soporte dual de autenticación (dynamic/static) y consecutivo atómico
