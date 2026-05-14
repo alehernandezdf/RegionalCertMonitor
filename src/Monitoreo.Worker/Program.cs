@@ -46,16 +46,14 @@ try
     var monitoringEnv = builder.Configuration["Monitoring:Environment"] ?? "Development";
     var isDevelopment = string.Equals(monitoringEnv, "Development", StringComparison.OrdinalIgnoreCase);
 
-    // Serilog
+    // Serilog (Console sink ya viene de appsettings.json - NO duplicar aqui)
     builder.Services.AddSerilog((services, lc) =>
     {
         lc.ReadFrom.Configuration(builder.Configuration)
           .ReadFrom.Services(services)
           .Enrich.FromLogContext()
           .Enrich.WithProperty("Application", "MonitoreoUnificado")
-          .Enrich.WithProperty("Environment", monitoringEnv)
-          .WriteTo.Console(outputTemplate:
-              "[{Timestamp:HH:mm:ss} {Level:u3}] [{Country}/{CertificationType}] {Message:lj}{NewLine}{Exception}");
+          .Enrich.WithProperty("Environment", monitoringEnv);
 
         if (!isDevelopment)
         {
