@@ -77,7 +77,8 @@ public class NucCertificationService : ICertificationService
                 TransactionTimeMs: response.ElapsedMs,
                 ResultStatus: response.Success,
                 EventErrorMessage: response.Success ? null : response.ErrorMessage,
-                CreatedAt: DateTimeOffset.UtcNow);
+                CreatedAt: DateTimeOffset.UtcNow,
+                RawResponse: response.RawResponse);
         }
         catch (Exception ex)
         {
@@ -92,7 +93,8 @@ public class NucCertificationService : ICertificationService
                 TransactionTimeMs: 0,
                 ResultStatus: false,
                 EventErrorMessage: ex.Message,
-                CreatedAt: DateTimeOffset.UtcNow);
+                CreatedAt: DateTimeOffset.UtcNow,
+                RawResponse: ex.ToString());
         }
     }
 
@@ -238,7 +240,8 @@ public class NucCertificationService : ICertificationService
             return new NucResponse(
                 Success: false,
                 ErrorMessage: $"Respuesta no-JSON del servicio NUC (HTTP {response.StatusCode}): {body[..Math.Min(300, body.Length)]}",
-                ElapsedMs: elapsedMs);
+                ElapsedMs: elapsedMs,
+                RawResponse: body);
         }
 
         using (doc)
@@ -265,8 +268,9 @@ public class NucCertificationService : ICertificationService
             var isSuccess = code == "1";
             return new NucResponse(
                 Success: isSuccess,
-                ErrorMessage: isSuccess ? null : $"Code={code}, Message={message}, Desc={description?[..Math.Min(200, description?.Length ?? 0)]}",
-                ElapsedMs: elapsedMs);
+                ErrorMessage: isSuccess ? null : $"Code={code}, Message={message}, Desc={description}",
+                ElapsedMs: elapsedMs,
+                RawResponse: body);
         }
     }
 
@@ -307,6 +311,6 @@ public class NucCertificationService : ICertificationService
     }
     // END-REFACTOR::BE-660::2026-04-09::AHL::Optimizar InjectNucDynamicFields con Regex en vez de XDocument para reducir latencia
 
-    private record NucResponse(bool Success, string? ErrorMessage, long ElapsedMs = 0);
+    private record NucResponse(bool Success, string? ErrorMessage, long ElapsedMs = 0, string? RawResponse = null);
 }
 // END-FEAT::BE-663::2026-03-17::AHL::Servicio de certificación NUC REST con soporte dual de autenticación (dynamic/static) y consecutivo atómico

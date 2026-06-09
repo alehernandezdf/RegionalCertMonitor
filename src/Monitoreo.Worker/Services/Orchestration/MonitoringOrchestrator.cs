@@ -96,9 +96,12 @@ public class MonitoringOrchestrator : IMonitoringOrchestrator
             }
         }
 
-        // 3. Evaluar notificaciones para resultados con fallo o tiempo > umbral
-        var alertResults = results.Where(r =>
-            !r.ResultStatus || r.TransactionTimeMs > config.AlertThresholdMs).ToList();
+        // 3. Evaluar notificaciones para CUALQUIER fallo (ResultStatus = false):
+        //    - Ceros: transaccion sin respuesta (timeout >60s o fallo de conexion)
+        //    - Errores de negocio / rechazos: respondio pero con code != 1
+        //    NO se notifica por lentitud sola (si respondio OK aunque tarde).
+        // FIX::BE-672::2026-06-01::AHL::Notificar todo fallo (ceros + rechazos), pero NO lentitud
+        var alertResults = results.Where(r => !r.ResultStatus).ToList();
 
         foreach (var result in alertResults)
         {

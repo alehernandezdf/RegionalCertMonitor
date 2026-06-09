@@ -1,0 +1,201 @@
+{
+    "Version": "1.00",
+    "CountryCode": "GT",
+    "Header": {
+        "DocType": "FACT",
+        "GUID": null,
+        "IssuedDateTime": "2026-05-04T01:20:09-06:00",
+        "AdditionalIssueType": null,
+        "ExchangeRate": null,
+        "Currency": "GTQ",
+        "Reference": null,
+        "AdditionalIssueDocInfo": [
+            {
+                "Name": "NumeroAcceso",
+                "Data": null,
+                "Value": "100000011"
+            }
+        ]
+    },
+    "Seller": {
+        "TaxID": "123456",
+        "TaxIDType": null,
+        "TaxIDAdditionalInfo": [
+            {
+                "Name": "AfiliacionIVA",
+                "Data": null,
+                "Value": "GEN"
+            }
+        ],
+        "Name": "TEST GEN",
+        "FiscalCategory": null,
+        "Contact": {
+            "PhoneList": null,
+            "EmailList": {
+                "Email": [
+                    "josue.mejia@digifact.com"
+                ]
+            },
+            "Website": null
+        },
+        "AdditionlInfo": [
+            {
+                "Name": "TipoFrase",
+                "Data": "1",
+                "Value": "1"
+            },
+            {
+                "Name": "Escenario",
+                "Data": "1",
+                "Value": "1"
+            }
+        ],
+        "AddressInfo": null,
+        "BranchInfo": {
+            "Code": "1",
+            "Name": "TEST GEN",
+            "AddressInfo": {
+                "Address": "4 AVENIDA 15-70 ZONA 10 LOCAL 3 EDIFICIO PALADIUM",
+                "City": "01010",
+                "District": "Guatemala",
+                "State": "Guatemala",
+                "Country": "GT"
+            },
+            "Phone": null,
+            "AdditionalBranchInfo": null
+        }
+    },
+    "Buyer": {
+        "TaxID": "938881221",
+        "TaxIDType": null,
+        "TaxIDAdditionalInfo": null,
+        "Name": "Cliente pruebas",
+        "Contact": {
+            "PhoneList": null,
+            "EmailList": {
+                "Email": [
+                    "correoprueba@prueba.com"
+                ]
+            },
+            "Website": null
+        },
+        "AdditionlInfo": null,
+        "AddressInfo": {
+            "Address": "CIUDAD",
+            "City": "01010",
+            "District": "GUATEMALA",
+            "State": "GUATEMALA",
+            "Country": "MX"
+        }
+    },
+    "ThirdParties": null,
+    "Items": [
+        {
+            "Number": null,
+            "Codes": null,
+            "Type": "BIEN",
+            "Description": "EJEMPLO TABACO",
+            "Qty": "10.000000",
+            "UnitOfMeasure": "UNO",
+            "Price": "50.000000",
+            "Discounts": null,
+            "Taxes": {
+                "Tax": [
+                    {
+                        "Code": "1",
+                        "Description": "IVA",
+                        "TaxableAmount": "446.430000",
+                        "ChargableAmount": null,
+                        "Rate": null,
+                        "Amount": "53.570000"
+                    },
+                    {
+                        "Code": "1",
+                        "Description": "TABACO",
+                        "TaxableAmount": "25.00",
+                        "ChargableAmount": "10.000000",
+                        "Rate": null,
+                        "Amount": "250.000000"
+                    }
+                ]
+            },
+            "Charges": null,
+            "Totals": {
+                "TotalItem": "750.000000"
+            },
+            "AdditionalInfo": null
+        }
+    ],
+    "Charges": null,
+    "Totals": {
+        "TotalItems": null,
+        "TotalTaxableAmount": null,
+        "TotalTaxes": {
+            "TotalTax": [
+                {
+                    "Code": null,
+                    "Description": "IVA",
+                    "TaxableAmount": null,
+                    "ChargableAmount": null,
+                    "Rate": null,
+                    "Amount": "53.570000"
+                },
+                {
+                    "Code": null,
+                    "Description": "TABACO",
+                    "TaxableAmount": null,
+                    "ChargableAmount": null,
+                    "Rate": null,
+                    "Amount": "250.000000"
+                }
+            ]
+        },
+        "TotalCharges": null,
+        "TotalDiscounts": null,
+        "GrandTotal": {
+            "InvoiceTotal": "750.000000"
+        },
+        "InWords": null,
+        "AdditionalInfo": null
+    },
+    "Payments": null,
+    "AdditionalDocumentInfo": {
+        "DocTemplate": null,
+        "AdditionalInfo": [
+            {
+                "Code": "JulitoCifuentes20251216_1",
+                "Type": "ADENDA",
+                "Description": null,
+                "AddressInfo": null,
+                "Texts": null,
+                "AditionalData": {
+                    "Data": [
+                        {
+                            "Info": [
+                                {
+                                    "Name": "OBSERVACIONES",
+                                    "Data": null,
+                                    "Value": "-"
+                                },
+                                {
+                                    "Name": "CANTIDAD_LETRAS",
+                                    "Data": null,
+                                    "Value": "SEISCIENTOS TREINTA Y UN QUETZALES CON 00/100"
+                                }
+                            ],
+                            "Name": "INFORMACION_ADICIONAL",
+                            "Id": 0
+                        }
+                    ]
+                },
+                "AditionalInfo": [
+                    {
+                        "Name": "VALIDAR_REFERENCIA_INTERNA",
+                        "Data": null,
+                        "Value": "NO_VALIDAR"
+                    }
+                ]
+            }
+        ]
+    }
+}

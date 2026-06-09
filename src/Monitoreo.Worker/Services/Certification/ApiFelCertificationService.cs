@@ -68,13 +68,13 @@ public class ApiFelCertificationService : ICertificationService
 
             return new MonitoringResult(Guid.NewGuid(), config.CountryCode, CertificationType.API,
                 config.ApiEndpoint, sw.ElapsedMilliseconds, success,
-                success ? null : errorMsg, DateTimeOffset.UtcNow);
+                success ? null : errorMsg, DateTimeOffset.UtcNow, RawResponse: responseBody);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "API {Country} #{Consecutivo}: Error", config.CountryCode, consecutivo);
             return new MonitoringResult(Guid.NewGuid(), config.CountryCode, CertificationType.API,
-                config.ApiEndpoint ?? "N/A", 0, false, ex.Message, DateTimeOffset.UtcNow);
+                config.ApiEndpoint ?? "N/A", 0, false, ex.Message, DateTimeOffset.UtcNow, RawResponse: ex.ToString());
         }
     }
 
