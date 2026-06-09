@@ -74,9 +74,9 @@ try
         builder.Services.AddSingleton<IAmazonSimpleSystemsManagement>(_ => new AmazonSimpleSystemsManagementClient(dummyCreds, region));
         builder.Services.AddSingleton<IAmazonSecretsManager>(_ => new AmazonSecretsManagerClient(dummyCreds, region));
 
-        // Notificaciones y metricas: stubs locales (log a consola)
+        // Notificaciones: gate local (sin SSM) + email real via SMTP, metricas a consola
         builder.Services.AddSingleton<INotificationGateService, LocalNotificationGateService>();
-        builder.Services.AddSingleton<INotificationService, ConsoleNotificationService>();
+        builder.Services.AddSingleton<INotificationService, EmailNotificationService>();
         builder.Services.AddSingleton<IMetricsPublisher, ConsoleMetricsPublisher>();
     }
     else

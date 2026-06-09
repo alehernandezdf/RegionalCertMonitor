@@ -1,0 +1,129 @@
+{
+  "Version": "1.00",
+  "CountryCode": "GT",
+  "Header": {
+    "DocType": "FACT",
+    "IssuedDateTime": "2026-05-04T01:20:09-06:00",
+    "Currency": "GTQ"
+  },
+  "Seller": {
+    "TaxID": "123456",
+    "TaxIDAdditionalInfo": [{ "Name": "AfiliacionIVA", "Data": null, "Value": "GEN" }],
+    "Name": "TEST GEN",
+    "Contact": { "EmailList": { "Email": ["josue.mejia@digifact.com"] } },
+    "AdditionlInfo": [
+      { "Name": "TipoFrase", "Data": "1", "Value": "1" },
+      { "Name": "Escenario", "Data": "1", "Value": "1" }
+    ],
+    "BranchInfo": {
+      "Code": "1",
+      "Name": "TEST GEN",
+      "AddressInfo": {
+        "Address": "4 AVENIDA 15-70 ZONA 10 LOCAL 3 EDIFICIO PALADIUM",
+        "City": "01010",
+        "District": "Guatemala",
+        "State": "Guatemala",
+        "Country": "GT"
+      }
+    }
+  },
+  "Buyer": {
+    "TaxID": "938881221",
+    "Name": "Cliente pruebas",
+    "AddressInfo": {
+      "Address": "CIUDAD",
+      "City": "01010",
+      "District": "GUATEMALA",
+      "State": "GUATEMALA",
+      "Country": "GT"
+    }
+  },
+  "ThirdParties": null,
+  "Items": [
+    {
+      "Number": "1",
+      "Codes": null,
+      "Type": "Bien",
+      "Description": "CILINDRO DE GAS PROPANO 16 ONZ 327774 | 7154",
+      "Qty": "2.00",
+      "UnitOfMeasure": "PZA",
+      "Price": "95.0000",
+      "Discounts": null,
+      "Taxes": {
+        "Tax": [{ "Code": "1", "Description": "IVA", "TaxableAmount": "169.6428", "Amount": "20.3571" }]
+      },
+      "Totals": { "TotalItem": "190" }
+    },
+    {
+      "Number": "2",
+      "Codes": null,
+      "Type": "Bien",
+      "Description": "PORTAROLLO 2 PIEZAS NIQUEL 16225 EASTMAN | 476904",
+      "Qty": "2.00",
+      "UnitOfMeasure": "PZA",
+      "Price": "22.7165",
+      "Discounts": null,
+      "Taxes": {
+        "Tax": [{ "Code": "1", "Description": "IVA", "TaxableAmount": "40.5652", "Amount": "4.8678" }]
+      },
+      "Totals": { "TotalItem": "45.433" }
+    },
+    {
+      "Number": "3",
+      "Codes": null,
+      "Type": "Bien",
+      "Description": "ORGANIZADOR PARA DUCHA METALICO 1 CESTO NEGRO 91010108 | 437733",
+      "Qty": "1.00",
+      "UnitOfMeasure": "PZA",
+      "Price": "100.0000",
+      "Discounts": null,
+      "Taxes": {
+        "Tax": [{ "Code": "1", "Description": "IVA", "TaxableAmount": "89.2857", "Amount": "10.7143" }]
+      },
+      "Totals": { "TotalItem": "100" }
+    }
+  ],
+  "Totals": {
+    "TotalTaxes": {
+      "TotalTax": [{ "Description": "IVA", "Amount": "35.9392" }]
+    },
+    "GrandTotal": { "InvoiceTotal": "335.43" }
+  },
+  "AdditionalDocumentInfo": {
+    "AdditionalInfo": [
+      {
+        "Code": "GFT2132683",
+        "Type": "ADENDA",
+        "AditionalData": {
+          "Data": [
+            {
+              "Info": [
+                { "Name": "CONTROLINTERNO", "Data": null, "Value": "GFT2132683" },
+                { "Name": "CODIGOVENDEDOR", "Data": null, "Value": "0000S08" },
+                { "Name": "CODIGOCLIENTE", "Data": null, "Value": "2204004109" },
+                { "Name": "OBSERVACIONES", "Data": null, "Value": "-" },
+                { "Name": "CONDICIONPAGO", "Data": null, "Value": "CONTADO" },
+                { "Name": "FORMASPAGO", "Data": null, "Value": "P0" },
+                { "Name": "DIASCREDITO", "Data": null, "Value": "0" },
+                { "Name": "CANTIDAD_LETRAS", "Data": null, "Value": "TRESCIENTOS TREINTA Y CINCO 43/100" },
+                { "Name": "NUMBEROPBX", "Data": null, "Value": "-" },
+                { "Name": "RESPONSABLEEMISOR", "Data": null, "Value": "-" },
+                { "Name": "DOCUMENTORESPONSABLEEMISOR", "Data": null, "Value": "-" },
+                { "Name": "RESPONSABLERECEPTOR", "Data": null, "Value": "-" },
+                { "Name": "DOCUMENTORESPONSABLERECEPTOR", "Data": null, "Value": "-" },
+                { "Name": "SUCURSAL", "Data": null, "Value": "08" },
+                { "Name": "CAJAZETA", "Data": null, "Value": "02/945" },
+                { "Name": "ORDENCOMPRA", "Data": null, "Value": "-" },
+                { "Name": "REFNOTACREDITO", "Data": null, "Value": "-" }
+              ],
+              "Name": "INFORMACION_ADICIONAL"
+            }
+          ]
+        },
+        "AditionalInfo": [
+          { "Name": "VALIDAR_REFERENCIA_INTERNA", "Data": null, "Value": "NO_VALIDAR" }
+        ]
+      }
+    ]
+  }
+}

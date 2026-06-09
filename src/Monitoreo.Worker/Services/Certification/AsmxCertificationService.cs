@@ -65,7 +65,7 @@ public class AsmxCertificationService : ICertificationService
 
             return new MonitoringResult(Guid.NewGuid(), config.CountryCode, CertificationType.ASMX,
                 config.AsmxEndpoint, sw.ElapsedMilliseconds, success,
-                success ? null : errorMsg, DateTimeOffset.UtcNow);
+                success ? null : errorMsg, DateTimeOffset.UtcNow, RawResponse: responseBody);
         }
         catch (Exception ex)
         {
@@ -73,7 +73,7 @@ public class AsmxCertificationService : ICertificationService
                 config.CountryCode, consecutivo);
 
             return new MonitoringResult(Guid.NewGuid(), config.CountryCode, CertificationType.ASMX,
-                config.AsmxEndpoint, 0, false, ex.Message, DateTimeOffset.UtcNow);
+                config.AsmxEndpoint, 0, false, ex.Message, DateTimeOffset.UtcNow, RawResponse: ex.ToString());
         }
     }
 
