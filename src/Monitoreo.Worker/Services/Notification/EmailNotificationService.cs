@@ -105,6 +105,7 @@ public class EmailNotificationService : INotificationService
     private static string CountryName(string code) => code switch
     {
         "GT" => "GUATEMALA",
+        "GT2" => "GUATEMALA",
         "SV" => "EL SALVADOR",
         "CR" => "COSTA RICA",
         "DO" => "REPUBLICA DOMINICANA",
