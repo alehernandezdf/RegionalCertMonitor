@@ -87,7 +87,7 @@ public class EmailNotificationService : INotificationService
               </td></tr>
               <tr><td align='center' bgcolor='#D13438' style='color:white;padding:8px;font-size:14px;'><b>RESPUESTA COMPLETA DEL SERVICIO</b></td></tr>
               <tr><td style='padding:15px;'>
-                <pre style='white-space:pre-wrap;word-break:break-word;color:#D13438;font-size:12px;margin:0;'>{respuestaHtml}</pre>
+                <pre style='white-space:pre-wrap;word-break:break-word;color:#000000;font-size:12px;margin:0;'>{respuestaHtml}</pre>
               </td></tr>
             </table>
             </body></html>
