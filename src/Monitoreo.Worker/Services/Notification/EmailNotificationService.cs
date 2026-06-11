@@ -40,8 +40,9 @@ public class EmailNotificationService : INotificationService
         var apiLabel = ApiLabel(result.CertificationType);
         var countryName = CountryName(result.Country);
         var tituloAccion = result.ResultStatus ? "DEMORA EN CERTIFICACION" : "ERROR EN CERTIFICACION";
-        var subject = $"{tituloAccion} {apiLabel} {countryName}";
-        var body = BuildHtmlBody(result, apiLabel, countryName, tituloAccion);
+        var titulo = $"🚨 ALERTA {countryName}: {tituloAccion} {apiLabel}";
+        var subject = titulo;
+        var body = BuildHtmlBody(result, apiLabel, countryName, titulo);
 
         using var msg = new MailMessage();
         msg.From = new MailAddress(fromAddress, fromName);
@@ -62,7 +63,7 @@ public class EmailNotificationService : INotificationService
             payload.Recipients.Count, result.Country, result.CertificationType);
     }
 
-    private static string BuildHtmlBody(MonitoringResult result, string apiLabel, string countryName, string tituloAccion)
+    private static string BuildHtmlBody(MonitoringResult result, string apiLabel, string countryName, string titulo)
     {
         // Respuesta completa del servicio (sin truncar). Si no hay, usa el mensaje de error.
         var respuesta = result.RawResponse;
@@ -74,7 +75,7 @@ public class EmailNotificationService : INotificationService
         return $"""
             <html><body style='font-family:Arial,sans-serif;'>
             <table width='900' bgcolor='#f2f2f2' style='border-collapse:collapse;'>
-              <tr><td align='center' bgcolor='#D13438' style='color:white;padding:12px;font-size:16px;'><b>{tituloAccion} {apiLabel} {countryName}</b></td></tr>
+              <tr><td align='center' bgcolor='#D13438' style='color:white;padding:12px;font-size:16px;'><b>{titulo}</b></td></tr>
               <tr><td style='padding:15px;'>
                 <table width='100%' style='border-collapse:collapse;'>
                   <tr><td style='padding:6px;width:160px;'><b>API:</b></td><td style='padding:6px;'>{apiLabel}</td></tr>
