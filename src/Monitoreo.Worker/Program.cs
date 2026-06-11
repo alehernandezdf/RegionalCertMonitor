@@ -74,9 +74,12 @@ try
         builder.Services.AddSingleton<IAmazonSimpleSystemsManagement>(_ => new AmazonSimpleSystemsManagementClient(dummyCreds, region));
         builder.Services.AddSingleton<IAmazonSecretsManager>(_ => new AmazonSecretsManagerClient(dummyCreds, region));
 
-        // Notificaciones: gate local (sin SSM) + email real via SMTP, metricas a consola
+        // Notificaciones: gate local (sin SSM) + email real via SMTP + WhatsApp real, metricas a consola
         builder.Services.AddSingleton<INotificationGateService, LocalNotificationGateService>();
-        builder.Services.AddSingleton<INotificationService, EmailNotificationService>();
+        builder.Services.AddSingleton<EmailNotificationService>();
+        builder.Services.AddSingleton<WhatsAppNotificationService>();
+        builder.Services.AddSingleton<INotificationService>(sp => sp.GetRequiredService<EmailNotificationService>());
+        builder.Services.AddSingleton<INotificationService>(sp => sp.GetRequiredService<WhatsAppNotificationService>());
         builder.Services.AddSingleton<IMetricsPublisher, ConsoleMetricsPublisher>();
     }
     else
