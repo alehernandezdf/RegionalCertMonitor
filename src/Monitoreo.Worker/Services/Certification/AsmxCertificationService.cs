@@ -42,9 +42,7 @@ public class AsmxCertificationService : ICertificationService
             var client = _httpClientFactory.CreateClient("AsmxClient");
             var content = new StringContent(soapEnvelope, System.Text.Encoding.UTF8, "text/xml");
 
-            var soapAction = config.CountryCode.StartsWith("GT")
-                ? "http://www.fact.com.mx/schema/ws/RequestTransaction"
-                : "https://corec.digifact.com/schema/ws/RequestTransaction";
+            var soapAction = GetWsNamespace(config.CountryCode) + "/RequestTransaction";
             content.Headers.Add("SOAPAction", soapAction);
 
             _logger.LogDebug("ASMX {Country} #{Consecutivo} REQUEST enviando...", config.CountryCode, consecutivo);
@@ -77,6 +75,15 @@ public class AsmxCertificationService : ICertificationService
         }
     }
 
+    // BEGIN-FEAT::BE-662::2026-07-01::AHL::Namespace del WS por país (PA tiene el suyo propio)
+    private static string GetWsNamespace(string countryCode) => countryCode switch
+    {
+        var c when c.StartsWith("GT") => "http://www.fact.com.mx/schema/ws",
+        "PA" => "https://www.digifact.com.pa/schema/ws",
+        _ => "https://corec.digifact.com/schema/ws"
+    };
+    // END-FEAT::BE-662::2026-07-01::AHL::Namespace del WS por país
+
     private static string BuildSoapEnvelope(CountryConfig config, string xmlData)
     {
         var username = config.AsmxUsernameFormat != null
@@ -88,12 +95,7 @@ public class AsmxCertificationService : ICertificationService
 
         var actualCountry = config.CountryCode.StartsWith("GT") ? "GT" : config.CountryCode;
         var transaction = config.AsmxTransactionType;
-        var soapAction = actualCountry == "GT"
-            ? "http://www.fact.com.mx/schema/ws/RequestTransaction"
-            : "https://corec.digifact.com/schema/ws/RequestTransaction";
-        var wsNamespace = actualCountry == "GT"
-            ? "http://www.fact.com.mx/schema/ws"
-            : "https://corec.digifact.com/schema/ws";
+        var wsNamespace = GetWsNamespace(config.CountryCode);
 
         return $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"" xmlns:ws=""{wsNamespace}"">
@@ -170,6 +172,21 @@ public class AsmxCertificationService : ICertificationService
                 if (name == "Secuencial")
                     info.SetAttributeValue("Value", (6000000000 + consecutivo).ToString("D15"));
             }
+        }
+        else if (config.CountryCode == "PA")
+        {
+            // BEGIN-FEAT::BE-662::2026-07-01::AHL::Campos dinámicos ASMX PA: dNroDF/dSeg con contador atómico (base distinta a NUC para no colisionar) + dFechaEm
+            XNamespace fe = "http://dgi-fep.mef.gob.pa";
+            var paNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("America/Panama"));
+            var gDGen = doc.Root?.Element(fe + "gDGen");
+            if (gDGen != null)
+            {
+                // Base 2140000000 (NUC usa 1140000000) para que nunca se crucen los rangos
+                gDGen.Element(fe + "dNroDF")?.SetValue((2140000000L + consecutivo).ToString());
+                gDGen.Element(fe + "dSeg")?.SetValue((700000000 + consecutivo).ToString("D9"));
+                gDGen.Element(fe + "dFechaEm")?.SetValue(paNow.ToString("yyyy-MM-ddTHH:mm:ss-05:00"));
+            }
+            // END-FEAT::BE-662::2026-07-01::AHL::Campos dinámicos ASMX PA
         }
         else
         {
