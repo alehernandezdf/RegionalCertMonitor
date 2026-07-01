@@ -9,6 +9,8 @@ services:
       - DOTNET_ENVIRONMENT=Development
       - ConnectionStrings__PostgreSQL=Host=postgres;Port=5432;Database=monitoreo;Username=monitoreo;Password=monitoreo_dev
       - Monitoring__Environment=Development
+      # Kill switch de alertas: false por defecto (local NUNCA alerta). El server lo enciende con un archivo .env que solo existe alla: MONITOREO_ALERTS_ENABLED=true
+      - Notifications__Enabled=${MONITOREO_ALERTS_ENABLED:-false}
     volumes:
       - ./src/Monitoreo.Worker/appsettings.json:/app/appsettings.json:ro
       - ./src/Monitoreo.Worker/appsettings.CR.json:/app/appsettings.CR.json:ro

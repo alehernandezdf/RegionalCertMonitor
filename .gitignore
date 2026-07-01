@@ -58,3 +58,6 @@ repos_monitoreo/
 
 ## Claude settings
 .claude/
+
+# Config local de entorno (kill switch de alertas del server)
+.env
