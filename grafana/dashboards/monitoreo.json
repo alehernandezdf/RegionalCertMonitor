@@ -125,7 +125,7 @@
     },
     {
       "id": 6,
-      "title": "🏆 Días sin incidentes",
+      "title": "⚠️ Últimos Errores",
       "type": "table",
       "gridPos": { "x": 16, "y": 8, "w": 8, "h": 8 },
       "datasource": { "type": "grafana-postgresql-datasource", "uid": "monitoreo-pg" },
@@ -133,25 +133,24 @@
         {
           "refId": "A",
           "format": "table",
-          "rawSql": "SELECT CASE country WHEN 'GT' THEN '🇬🇹 Guatemala' WHEN 'SV' THEN '🇸🇻 El Salvador' WHEN 'CR' THEN '🇨🇷 Costa Rica' WHEN 'PA' THEN '🇵🇦 Panamá' WHEN 'DO' THEN '🇩🇴 Rep. Dominicana' ELSE country END AS \"País\", to_char(MAX(incident_date), 'DD/MM/YYYY') AS \"Último incidente\", (CURRENT_DATE - MAX(incident_date))::int AS \"Días sin incidentes\" FROM incidents GROUP BY country ORDER BY 3 DESC"
+          "rawSql": "SELECT to_char((created_at AT TIME ZONE 'America/Guatemala'), 'DD/MM HH24:MI:SS') AS \"Fecha/Hora\", country AS \"País\", certification_type AS \"Tipo\", COALESCE(event_error_message, '') AS \"Error\" FROM monitoring_results WHERE result_status = false AND transaction_time_ms = 0 ORDER BY created_at DESC LIMIT 8"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "custom": { "align": "left", "cellOptions": { "type": "auto" }, "inspect": false }
+          "custom": { "align": "left", "cellOptions": { "type": "auto" }, "inspect": false },
+          "color": { "mode": "fixed", "fixedColor": "red" }
         },
         "overrides": [
-          { "matcher": { "id": "byName", "options": "País" }, "properties": [{ "id": "custom.width", "value": 150 }] },
-          { "matcher": { "id": "byName", "options": "Último incidente" }, "properties": [{ "id": "custom.width", "value": 130 }] },
-          { "matcher": { "id": "byName", "options": "Días sin incidentes" }, "properties": [
-            { "id": "custom.align", "value": "center" },
-            { "id": "custom.cellOptions", "value": { "type": "color-background" } },
-            { "id": "thresholds", "value": { "mode": "absolute", "steps": [ { "value": null, "color": "red" }, { "value": 7, "color": "yellow" }, { "value": 30, "color": "green" } ] } }
-          ] }
+          { "matcher": { "id": "byName", "options": "Fecha/Hora" }, "properties": [{ "id": "custom.width", "value": 100 }] },
+          { "matcher": { "id": "byName", "options": "País" }, "properties": [{ "id": "custom.width", "value": 40 }] },
+          { "matcher": { "id": "byName", "options": "Tipo" }, "properties": [{ "id": "custom.width", "value": 50 }] },
+          { "matcher": { "id": "byName", "options": "Error" }, "properties": [{ "id": "custom.cellOptions", "value": { "type": "auto", "wrapText": true } }] }
         ]
       },
       "options": {
         "showHeader": true,
+        "sortBy": [{ "displayName": "Hora", "desc": true }],
         "footer": { "show": false },
         "frameIndex": 0
       },
