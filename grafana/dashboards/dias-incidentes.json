@@ -1,0 +1,153 @@
+{
+  "uid": "dias-incidentes",
+  "title": "Días sin incidentes",
+  "refresh": "5m",
+  "time": { "from": "now-24h", "to": "now" },
+  "timezone": "America/Guatemala",
+  "schemaVersion": 39,
+  "panels": [
+    {
+      "id": 1,
+      "title": "🇬🇹 Guatemala",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 0, "w": 5, "h": 7 },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "monitoreo-pg" },
+      "targets": [
+        { "refId": "A", "format": "table", "rawSql": "SELECT (CURRENT_DATE - MAX(incident_date))::int AS dias FROM incidents WHERE country = 'GT'" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": { "mode": "absolute", "steps": [ { "value": null, "color": "red" }, { "value": 7, "color": "yellow" }, { "value": 30, "color": "green" } ] }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "textMode": "value", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 2,
+      "title": "🇸🇻 El Salvador",
+      "type": "stat",
+      "gridPos": { "x": 5, "y": 0, "w": 5, "h": 7 },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "monitoreo-pg" },
+      "targets": [
+        { "refId": "A", "format": "table", "rawSql": "SELECT (CURRENT_DATE - MAX(incident_date))::int AS dias FROM incidents WHERE country = 'SV'" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": { "mode": "absolute", "steps": [ { "value": null, "color": "red" }, { "value": 7, "color": "yellow" }, { "value": 30, "color": "green" } ] }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "textMode": "value", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 3,
+      "title": "🇨🇷 Costa Rica",
+      "type": "stat",
+      "gridPos": { "x": 10, "y": 0, "w": 5, "h": 7 },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "monitoreo-pg" },
+      "targets": [
+        { "refId": "A", "format": "table", "rawSql": "SELECT (CURRENT_DATE - MAX(incident_date))::int AS dias FROM incidents WHERE country = 'CR'" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": { "mode": "absolute", "steps": [ { "value": null, "color": "red" }, { "value": 7, "color": "yellow" }, { "value": 30, "color": "green" } ] }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "textMode": "value", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 4,
+      "title": "🇵🇦 Panamá",
+      "type": "stat",
+      "gridPos": { "x": 15, "y": 0, "w": 5, "h": 7 },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "monitoreo-pg" },
+      "targets": [
+        { "refId": "A", "format": "table", "rawSql": "SELECT (CURRENT_DATE - MAX(incident_date))::int AS dias FROM incidents WHERE country = 'PA'" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": { "mode": "absolute", "steps": [ { "value": null, "color": "red" }, { "value": 7, "color": "yellow" }, { "value": 30, "color": "green" } ] }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "textMode": "value", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 5,
+      "title": "🇩🇴 Rep. Dominicana",
+      "type": "stat",
+      "gridPos": { "x": 20, "y": 0, "w": 4, "h": 7 },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "monitoreo-pg" },
+      "targets": [
+        { "refId": "A", "format": "table", "rawSql": "SELECT (CURRENT_DATE - MAX(incident_date))::int AS dias FROM incidents WHERE country = 'DO'" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": { "mode": "absolute", "steps": [ { "value": null, "color": "red" }, { "value": 7, "color": "yellow" }, { "value": 30, "color": "green" } ] }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "textMode": "value", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 6,
+      "title": "Resumen por país",
+      "type": "table",
+      "gridPos": { "x": 0, "y": 7, "w": 12, "h": 9 },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "monitoreo-pg" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawSql": "SELECT CASE country WHEN 'GT' THEN '🇬🇹 Guatemala' WHEN 'SV' THEN '🇸🇻 El Salvador' WHEN 'CR' THEN '🇨🇷 Costa Rica' WHEN 'PA' THEN '🇵🇦 Panamá' WHEN 'DO' THEN '🇩🇴 Rep. Dominicana' ELSE country END AS \"País\", to_char(MAX(incident_date), 'DD/MM/YYYY') AS \"Último incidente\", (CURRENT_DATE - MAX(incident_date))::int AS \"Días sin incidentes\" FROM incidents GROUP BY country ORDER BY 3 DESC"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "align": "left", "cellOptions": { "type": "auto" }, "inspect": false }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Días sin incidentes" }, "properties": [
+            { "id": "custom.align", "value": "center" },
+            { "id": "custom.cellOptions", "value": { "type": "color-background" } },
+            { "id": "thresholds", "value": { "mode": "absolute", "steps": [ { "value": null, "color": "red" }, { "value": 7, "color": "yellow" }, { "value": 30, "color": "green" } ] } }
+          ] }
+        ]
+      },
+      "options": { "showHeader": true, "footer": { "show": false }, "frameIndex": 0 },
+      "transformations": []
+    },
+    {
+      "id": 7,
+      "title": "Historial de incidentes",
+      "type": "table",
+      "gridPos": { "x": 12, "y": 7, "w": 12, "h": 9 },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "monitoreo-pg" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawSql": "SELECT to_char(incident_date, 'DD/MM/YYYY') AS \"Fecha\", country AS \"País\", COALESCE(note, '') AS \"Descripción\" FROM incidents ORDER BY incident_date DESC LIMIT 20"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "align": "left", "cellOptions": { "type": "auto" }, "inspect": false }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Fecha" }, "properties": [{ "id": "custom.width", "value": 110 }] },
+          { "matcher": { "id": "byName", "options": "País" }, "properties": [{ "id": "custom.width", "value": 60 }] }
+        ]
+      },
+      "options": { "showHeader": true, "footer": { "show": false }, "frameIndex": 0 },
+      "transformations": []
+    }
+  ]
+}
