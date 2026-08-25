@@ -91,3 +91,13 @@ INSERT INTO notification_recipients (country, channel, destination) VALUES
     ('*', 'whatsapp', '50763884110')
 ON CONFLICT (country, channel, destination) DO NOTHING;
 -- END-FEAT::BE-672::2026-07-20::AHL::Destinatarios de notificaciones en BD
+
+-- BEGIN-FEAT::BE-672::2026-07-20::AHL::Cola de alertas de PRUEBA manuales
+-- Disparar prueba: INSERT INTO alert_test_queue (channel) VALUES ('email');  -- 'email' | 'whatsapp' | 'all'
+-- El worker la consume en <=15s y envia una alerta de PRUEBA a los destinatarios activos de notification_recipients.
+CREATE TABLE IF NOT EXISTS alert_test_queue (
+    id SERIAL PRIMARY KEY,
+    channel VARCHAR(10) NOT NULL DEFAULT 'email',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+-- END-FEAT::BE-672::2026-07-20::AHL::Cola de alertas de PRUEBA manuales
