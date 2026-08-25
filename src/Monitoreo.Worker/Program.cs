@@ -103,6 +103,10 @@ try
     // Persistence
     builder.Services.AddSingleton<IMonitoringRepository, PostgresMonitoringRepository>();
     builder.Services.AddSingleton<ISequentialCounterService, PostgresSequentialCounterService>();
+    // FEAT::BE-672::2026-07-20::AHL::Destinatarios de notificaciones desde BD (fallback a appsettings)
+    builder.Services.AddSingleton<INotificationRecipientsService, PostgresNotificationRecipientsService>();
+    // FEAT::BE-672::2026-07-20::AHL::Disparador manual de alertas de prueba (INSERT en alert_test_queue)
+    builder.Services.AddHostedService<TestAlertWorker>();
 
     // Certification services
     builder.Services.AddSingleton<IPfxSigningService, PfxSigningService>();
