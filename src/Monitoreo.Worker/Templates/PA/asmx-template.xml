@@ -1,2 +1,13 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
-<rFE xmlns="http://dgi-fep.mef.gob.pa"><dVerForm>1.00</dVerForm><dId>PLACEHOLDER_CUFE</dId><gDGen><iAmb>1</iAmb><iTpEmis>01</iTpEmis><iDoc>01</iDoc><dNroDF>1340511867</dNroDF><dPtoFacDF>001</dPtoFacDF><dSeg>483245436</dSeg><dFechaEm>2026-07-01T16:09:50-05:00</dFechaEm><iNatOp>01</iNatOp><iTipoOp>1</iTipoOp><iDest>1</iDest><iFormCAFE>1</iFormCAFE><iEntCAFE>1</iEntCAFE><dEnvFE>1</dEnvFE><iProGen>1</iProGen><iTipoTranVenta>1</iTipoTranVenta><iTipoSuc>2</iTipoSuc><gEmis><gRucEmi><dTipoRuc>2</dTipoRuc><dRuc>29-29-29</dRuc><dDV>56</dDV></gRucEmi><dNombEm>TEST PRUEBA FE</dNombEm><dSucEm>0001</dSucEm><dCoordEm>+8.9892,-79.5201</dCoordEm><dDirecEm>Blv Costa del Este,PH Financial Tower Piso 17</dDirecEm><gUbiEm><dCodUbi>1-1-1</dCodUbi><dCorreg>Bocas del Toro (Cabecera)</dCorreg><dDistr>Bocas del Toro</dDistr><dProv>Bocas del Toro</dProv></gUbiEm><dTfnEm>997-8242</dTfnEm></gEmis><gDatRec><iTipoRec>01</iTipoRec><gRucRec><dTipoRuc>2</dTipoRuc><dRuc>15430-249-148718</dRuc><dDV>09</dDV></gRucRec><dNombRec>Ace International Hardware Corp.</dNombRec><dDirecRec>Westland Mall, Vista Alegre, Arraijan</dDirecRec><gUbiRec><dCodUbi>1-1-1</dCodUbi><dCorreg>Bocas del Toro (Cabecera)</dCorreg><dDistr>Bocas del Toro</dDistr><dProv>Bocas del Toro</dProv></gUbiRec><cPaisRec>PA</cPaisRec></gDatRec></gDGen><gItem><dSecItem>001</dSecItem><dDescProd>certificacion unificada</dDescProd><dCodProd>1234567890</dCodProd><cUnidad>m</cUnidad><dCantCodInt>1.000</dCantCodInt><dCodCPBSabr>13</dCodCPBSabr><gPrecios><dPrUnit>1.000</dPrUnit><dPrItem>1.000</dPrItem><dPrAcarItem>1.01</dPrAcarItem><dValTotItem>2.010</dValTotItem></gPrecios><gITBMSItem><dTasaITBMS>00</dTasaITBMS><dValITBMS>0.00</dValITBMS></gITBMSItem></gItem><gTot><dTotNeto>1.00</dTotNeto><dTotITBMS>0.00</dTotITBMS><dTotGravado>0.00</dTotGravado><dVTot>2.01</dVTot><dTotRec>2.01</dTotRec><iPzPag>1</iPzPag><dNroItems>1</dNroItems><dVTotItems>2.01</dVTotItems><gFormaPago><iFormaPago>01</iFormaPago><dVlrCuota>2.01</dVlrCuota></gFormaPago></gTot></rFE>
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Template ASMX para PA — Monitoreo (requiere PFX + QR + CUFE) -->
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <CertificaDocumento>
+      <Clave>MON-PA-000000</Clave>
+      <FechaEmision>2026-01-01T00:00:00-05:00</FechaEmision>
+      <Consecutivo>0000000000</Consecutivo>
+      <ADDQR></ADDQR>
+      <CUFE></CUFE>
+    </CertificaDocumento>
+  </soap:Body>
+</soap:Envelope>

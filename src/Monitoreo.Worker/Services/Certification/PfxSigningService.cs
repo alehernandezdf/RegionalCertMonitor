@@ -21,9 +21,8 @@ public class PfxSigningService : IPfxSigningService
         var pfxBytes = Convert.FromBase64String(pfxBase64);
         using var cert = X509CertificateLoader.LoadPkcs12(pfxBytes, pfxPassword, X509KeyStorageFlags.EphemeralKeySet);
 
-        // FIX::BE-662::2026-07-01::AHL::No abortar por PFX vencido: el monitoreo viejo firmaba igual y el backend lo acepta (cert de PA vencido desde 2023). Solo advertir.
         if (cert.NotAfter < DateTimeOffset.UtcNow)
-            _logger.LogWarning("Certificado PFX expirado ({NotAfter:yyyy-MM-dd}), firmando de todos modos (comportamiento del monitoreo viejo)", cert.NotAfter);
+            throw new InvalidOperationException($"Certificado PFX expirado: {cert.NotAfter:yyyy-MM-dd}");
 
         var xmlDoc = new XmlDocument { PreserveWhitespace = true };
         xmlDoc.LoadXml(xmlContent);
