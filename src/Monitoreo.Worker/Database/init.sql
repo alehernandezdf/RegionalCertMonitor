@@ -79,7 +79,7 @@ INSERT INTO notification_recipients (country, channel, destination) VALUES
     ('*', 'email', 'diego.bercian@digifact.com'),
     ('*', 'email', 'hector.lau@digifact.com'),
     ('*', 'email', 'pablo.culajay@digifact.com'),
-    ('*', 'email', 'raynert.pantoja@digifact.com'),
+    ('PA', 'email', 'raynert.pantoja@digifact.com'),
     ('*', 'whatsapp', '50230002383'),
     ('*', 'whatsapp', '50232747582'),
     ('*', 'whatsapp', '50240209249'),
@@ -88,7 +88,7 @@ INSERT INTO notification_recipients (country, channel, destination) VALUES
     ('*', 'whatsapp', '50250533652'),
     ('*', 'whatsapp', '50233487682'),
     ('*', 'whatsapp', '50256320736'),
-    ('*', 'whatsapp', '50763884110')
+    ('PA', 'whatsapp', '50763884110')
 ON CONFLICT (country, channel, destination) DO NOTHING;
 -- END-FEAT::BE-672::2026-07-20::AHL::Destinatarios de notificaciones en BD
 
