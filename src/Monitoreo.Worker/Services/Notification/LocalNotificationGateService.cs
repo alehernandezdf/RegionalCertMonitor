@@ -7,26 +7,14 @@ namespace Monitoreo.Worker.Services.Notification;
 public class LocalNotificationGateService : INotificationGateService
 {
     private readonly ConcurrentDictionary<string, DateTimeOffset> _lastNotificationTimes = new();
-    private readonly IConfiguration _configuration;
     private readonly ILogger<LocalNotificationGateService> _logger;
 
-    public LocalNotificationGateService(IConfiguration configuration, ILogger<LocalNotificationGateService> logger)
-    {
-        _configuration = configuration;
-        _logger = logger;
-    }
+    public LocalNotificationGateService(ILogger<LocalNotificationGateService> logger) => _logger = logger;
 
     public Task<NotificationGateResult> EvaluateAsync(
         string countryCode, string certType, NotificationChannel channel, CancellationToken ct)
     {
-        // BEGIN-FIX::BE-672::2026-07-01::AHL::Kill switch global: apagado por defecto para que corridas locales NUNCA manden alertas. El server lo enciende con Notifications__Enabled=true (archivo .env)
-        if (!_configuration.GetValue("Notifications:Enabled", false))
-        {
-            _logger.LogDebug("[GATE] Suprimido: Notifications:Enabled=false (entorno local/no productivo)");
-            return Task.FromResult(new NotificationGateResult(false, "Notificaciones deshabilitadas (Notifications:Enabled=false)"));
-        }
-        // END-FIX::BE-672::2026-07-01::AHL::Kill switch global
-
+        // En desarrollo: siempre permitir (sin SSM, sin cooldown estricto)
         var key = $"{countryCode}_{certType}_{channel}";
         _lastNotificationTimes[key] = DateTimeOffset.UtcNow;
 

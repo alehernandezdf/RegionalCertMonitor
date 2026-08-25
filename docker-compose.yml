@@ -9,8 +9,6 @@ services:
       - DOTNET_ENVIRONMENT=Development
       - ConnectionStrings__PostgreSQL=Host=postgres;Port=5432;Database=monitoreo;Username=monitoreo;Password=monitoreo_dev
       - Monitoring__Environment=Development
-      # Kill switch de alertas: false por defecto (local NUNCA alerta). El server lo enciende con un archivo .env que solo existe alla: MONITOREO_ALERTS_ENABLED=true
-      - Notifications__Enabled=${MONITOREO_ALERTS_ENABLED:-false}
     volumes:
       - ./src/Monitoreo.Worker/appsettings.json:/app/appsettings.json:ro
       - ./src/Monitoreo.Worker/appsettings.CR.json:/app/appsettings.CR.json:ro
@@ -77,7 +75,7 @@ services:
       GF_USERS_DEFAULT_THEME: dark
       GF_PANELS_DISABLE_SANITIZE_HTML: "true"
     ports:
-      - "3000:3000"
+      - "3001:3000"
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./grafana/dashboards:/var/lib/grafana/dashboards:ro

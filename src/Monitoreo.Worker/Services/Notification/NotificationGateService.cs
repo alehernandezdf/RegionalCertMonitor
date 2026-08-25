@@ -30,14 +30,6 @@ public class NotificationGateService : INotificationGateService
     public async Task<NotificationGateResult> EvaluateAsync(
         string countryCode, string certType, NotificationChannel channel, CancellationToken ct)
     {
-        // BEGIN-FIX::BE-672::2026-07-01::AHL::Kill switch global por config: apagado por defecto (corridas locales no alertan)
-        if (!_configuration.GetValue("Notifications:Enabled", false))
-        {
-            _logger.LogDebug("Notificación suprimida: Notifications:Enabled=false");
-            return new NotificationGateResult(false, "Notificaciones deshabilitadas (Notifications:Enabled=false)");
-        }
-        // END-FIX::BE-672::2026-07-01::AHL::Kill switch global por config
-
         // 1. Kill switch global desde SSM (sin cache)
         if (!await IsGloballyEnabledAsync(ct))
         {

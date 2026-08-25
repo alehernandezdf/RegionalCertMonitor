@@ -37,19 +37,7 @@ public class AsmxPreProcessingPipeline : IAsmxPreProcessingPipeline
     {
         var xml = xmlContent;
 
-        // Orden PA (igual al monitoreo viejo): CUFE (dId) -> Firma PFX -> QR
-        // El CUFE va ANTES de firmar porque dId es parte del contenido firmado.
-        // El QR va DESPUES porque usa el DigestValue de la firma.
-
-        // Paso 1: CUFE (PA) — calcula dId con el algoritmo de la DGI
-        if (config.RequiresCufe)
-        {
-            _logger.LogDebug("Pipeline {Country}: Generando CUFE (dId)", config.CountryCode);
-            var cufeResult = await _cufeGeneration.GenerateCufeAsync(xml, config, ct);
-            xml = cufeResult.UpdatedXml;
-        }
-
-        // Paso 2: Firma PFX (PA, DO)
+        // Paso 1: Firma PFX (PA, DO)
         if (config.RequiresPfxSignature)
         {
             _logger.LogDebug("Pipeline {Country}: Firmando XML con PFX", config.CountryCode);
@@ -68,11 +56,19 @@ public class AsmxPreProcessingPipeline : IAsmxPreProcessingPipeline
             }
         }
 
-        // Paso 3: QR (PA) — usa el DigestValue de la firma
+        // Paso 2: Generacion QR (PA)
         if (config.RequiresQrGeneration)
         {
             _logger.LogDebug("Pipeline {Country}: Generando QR", config.CountryCode);
             xml = await _qrGeneration.AddQrToXmlAsync(xml, config, ct);
+        }
+
+        // Paso 3: CUFE + JWT (PA)
+        if (config.RequiresCufe)
+        {
+            _logger.LogDebug("Pipeline {Country}: Generando CUFE + JWT", config.CountryCode);
+            var cufeResult = await _cufeGeneration.GenerateCufeAsync(xml, config, ct);
+            xml = cufeResult.UpdatedXml;
         }
 
         return xml;
