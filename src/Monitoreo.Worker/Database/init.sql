@@ -79,7 +79,7 @@ INSERT INTO notification_recipients (country, channel, destination) VALUES
     ('*', 'email', 'diego.bercian@digifact.com'),
     ('*', 'email', 'hector.lau@digifact.com'),
     ('*', 'email', 'pablo.culajay@digifact.com'),
-    ('*', 'email', 'rayner.pantoja@digifact.com'),
+    ('*', 'email', 'raynert.pantoja@digifact.com'),
     ('*', 'whatsapp', '50230002383'),
     ('*', 'whatsapp', '50232747582'),
     ('*', 'whatsapp', '50240209249'),
