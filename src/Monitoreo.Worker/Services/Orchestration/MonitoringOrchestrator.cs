@@ -14,6 +14,7 @@ public class MonitoringOrchestrator : IMonitoringOrchestrator
     private readonly IEnumerable<INotificationService> _notifiers;
     private readonly INotificationGateService _notificationGate;
     private readonly IMetricsPublisher _metricsPublisher;
+    private readonly INotificationRecipientsService _recipientsService;
     private readonly ILogger<MonitoringOrchestrator> _logger;
 
     public MonitoringOrchestrator(
@@ -22,6 +23,7 @@ public class MonitoringOrchestrator : IMonitoringOrchestrator
         IEnumerable<INotificationService> notifiers,
         INotificationGateService notificationGate,
         IMetricsPublisher metricsPublisher,
+        INotificationRecipientsService recipientsService,
         ILogger<MonitoringOrchestrator> logger)
     {
         _certServices = certServices;
@@ -29,6 +31,7 @@ public class MonitoringOrchestrator : IMonitoringOrchestrator
         _notifiers = notifiers;
         _notificationGate = notificationGate;
         _metricsPublisher = metricsPublisher;
+        _recipientsService = recipientsService;
         _logger = logger;
     }
 
@@ -127,12 +130,16 @@ public class MonitoringOrchestrator : IMonitoringOrchestrator
             return;
         }
 
-        var (notificationType, recipients) = channel switch
+        // BEGIN-FEAT::BE-672::2026-07-20::AHL::Destinatarios desde BD (notification_recipients); appsettings queda como fallback si la tabla esta vacia o falla
+        var notificationType = channel == NotificationChannel.Email ? NotificationType.Email : NotificationType.WhatsApp;
+
+        var recipients = await _recipientsService.GetRecipientsAsync(config.CountryCode, channel, ct);
+        if (recipients.Count == 0)
         {
-            NotificationChannel.Email => (NotificationType.Email, config.EmailRecipients),
-            NotificationChannel.WhatsApp => (NotificationType.WhatsApp, config.WhatsAppNumbers),
-            _ => throw new ArgumentOutOfRangeException(nameof(channel))
-        };
+            recipients = channel == NotificationChannel.Email ? config.EmailRecipients : config.WhatsAppNumbers;
+            _logger.LogDebug("Destinatarios {Channel} desde appsettings (fallback): {Count}", channel, recipients.Count);
+        }
+        // END-FEAT::BE-672::2026-07-20::AHL::Destinatarios desde BD
 
         var payload = new NotificationPayload(result, notificationType, recipients);
 

@@ -54,3 +54,40 @@ INSERT INTO sequential_counters (country, cert_type, last_value) VALUES
     ('PA', 'ASMX', 0), ('PA', 'NUC', 0)
 ON CONFLICT (country, cert_type) DO NOTHING;
 -- END-FEAT::BE-660::2026-03-26::AHL::Tabla de consecutivos por país y tipo para control de secuencial entre reinicios
+
+-- BEGIN-FEAT::BE-672::2026-07-20::AHL::Destinatarios de notificaciones en BD: agregar/quitar correos y numeros SIN deploy
+-- country '*' aplica a todos los paises; channel es 'email' o 'whatsapp'.
+-- Agregar:    INSERT INTO notification_recipients (country, channel, destination) VALUES ('*', 'email', 'nuevo@digifact.com');
+-- Desactivar: UPDATE notification_recipients SET enabled = false WHERE destination = 'fulano@digifact.com';
+CREATE TABLE IF NOT EXISTS notification_recipients (
+    id SERIAL PRIMARY KEY,
+    country VARCHAR(5) NOT NULL DEFAULT '*',
+    channel VARCHAR(10) NOT NULL,
+    destination TEXT NOT NULL,
+    enabled BOOLEAN NOT NULL DEFAULT true,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (country, channel, destination)
+);
+
+INSERT INTO notification_recipients (country, channel, destination) VALUES
+    ('*', 'email', 'alejandro.hernandez@digifact.com'),
+    ('*', 'email', 'juan.giammattei@digifact.com'),
+    ('*', 'email', 'joshua.equite@digifact.com'),
+    ('*', 'email', 'julio.cifuentes@digifact.com'),
+    ('*', 'email', 'daniel.jimenez@digifact.com'),
+    ('*', 'email', 'ramiro.morales@digifact.com'),
+    ('*', 'email', 'diego.bercian@digifact.com'),
+    ('*', 'email', 'hector.lau@digifact.com'),
+    ('*', 'email', 'pablo.culajay@digifact.com'),
+    ('*', 'email', 'rayner.pantoja@digifact.com'),
+    ('*', 'whatsapp', '50230002383'),
+    ('*', 'whatsapp', '50232747582'),
+    ('*', 'whatsapp', '50240209249'),
+    ('*', 'whatsapp', '50253276129'),
+    ('*', 'whatsapp', '50249099817'),
+    ('*', 'whatsapp', '50250533652'),
+    ('*', 'whatsapp', '50233487682'),
+    ('*', 'whatsapp', '50256320736'),
+    ('*', 'whatsapp', '50763884110')
+ON CONFLICT (country, channel, destination) DO NOTHING;
+-- END-FEAT::BE-672::2026-07-20::AHL::Destinatarios de notificaciones en BD
