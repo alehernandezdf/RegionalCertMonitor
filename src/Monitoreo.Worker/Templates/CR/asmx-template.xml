@@ -4,11 +4,12 @@
     xmlns:xsd="http://www.w3.org/2001/XMLSchema"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="../../xmldsig-core-schema.xsd">
-    <Clave>50616072500312345678900000001010000000032100001504</Clave>
+    <!-- FIX::DRTI-6905::2026-09-02::AHL::Sucursal 000 -> 001 (posiciones 22-24 de la Clave). El worker conserva las partes fijas de esta Clave y solo regenera fecha y correlativo -->
+    <Clave>50616072500312345678900100001010000000032100001504</Clave>
     <ProveedorSistemas>3102891418</ProveedorSistemas>
     <CodigoActividadEmisor>6202.0</CodigoActividadEmisor>
     <CodigoActividadReceptor>6202.0</CodigoActividadReceptor>
-    <NumeroConsecutivo>00000001010000000032</NumeroConsecutivo>
+    <NumeroConsecutivo>00100001010000000032</NumeroConsecutivo>
     <FechaEmision>2025-07-16T11:45:00-06:00</FechaEmision>
     <Emisor>
         <Nombre>SERVICIO MONITORE SOCIEDAD DE RESPONSABILIDAD LIMITADA</Nombre>
