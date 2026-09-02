@@ -173,27 +173,39 @@ public class AsmxCertificationService : ICertificationService
         }
         else
         {
-            // CR y otros: actualizar Clave, FechaEmision, NumeroConsecutivo
+            // BEGIN-FIX::DRTI-6905::2026-09-02::AHL::CR: el template es la fuente de verdad de las partes fijas de la Clave.
+            // Antes emisor/sucursal/terminal/etc estaban quemados aqui y pisaban el template (por eso los cambios de template no surtian efecto).
+            // Estructura Clave CR (50 digitos): pais(3) fecha ddMMyy(6) cedula(12) sucursal(3) terminal(5) tipoDoc(2) correlativo(10) situacion(1) seguridad(8)
+            // El codigo SOLO regenera lo dinamico: fecha (hoy) y correlativo (contador atomico). Todo lo demas se conserva del template.
             var ns = doc.Root?.GetDefaultNamespace() ?? XNamespace.None;
-            var emisor = "003123456789";
-            var sucursal = "000";
-            var puntoVenta = "00070";
-            var tipodoc = "01";
-            var correlativo = consecutivo.ToString("D10");
-            var situacion = "1";
-            var codigoSeg = "00000001";
-
-            var clave = $"506{now:ddMMyy}{emisor}{sucursal}{puntoVenta}{tipodoc}{correlativo}{situacion}{codigoSeg}";
-            var numConsecutivo = $"{sucursal}{puntoVenta}{tipodoc}{correlativo}";
 
             var claveNode = doc.Descendants(ns + "Clave").FirstOrDefault();
-            if (claveNode != null) claveNode.Value = clave;
+            if (claveNode != null)
+            {
+                var tpl = claveNode.Value.Trim();
+                if (tpl.Length != 50)
+                    throw new InvalidOperationException(
+                        $"Clave del template {config.CountryCode} invalida: se esperaban 50 digitos y tiene {tpl.Length}");
+
+                var pais      = tpl.Substring(0, 3);
+                var cedula    = tpl.Substring(9, 12);
+                var sucursal  = tpl.Substring(21, 3);
+                var terminal  = tpl.Substring(24, 5);
+                var tipoDoc   = tpl.Substring(29, 2);
+                var situacion = tpl.Substring(41, 1);
+                var seguridad = tpl.Substring(42, 8);
+
+                var correlativo = consecutivo.ToString("D10");
+                claveNode.Value = $"{pais}{now:ddMMyy}{cedula}{sucursal}{terminal}{tipoDoc}{correlativo}{situacion}{seguridad}";
+
+                // NumeroConsecutivo = sucursal+terminal+tipoDoc+correlativo: rearmado con las MISMAS partes para no quedar inconsistente con la Clave
+                var numConsec = doc.Descendants(ns + "NumeroConsecutivo").FirstOrDefault();
+                if (numConsec != null) numConsec.Value = $"{sucursal}{terminal}{tipoDoc}{correlativo}";
+            }
 
             var fecha = doc.Descendants(ns + "FechaEmision").FirstOrDefault();
             if (fecha != null) fecha.Value = now.ToString("yyyy-MM-ddTHH:mm:ss");
-
-            var numConsec = doc.Descendants(ns + "NumeroConsecutivo").FirstOrDefault();
-            if (numConsec != null) numConsec.Value = numConsecutivo;
+            // END-FIX::DRTI-6905::2026-09-02::AHL::CR template como fuente de verdad
         }
 
         return doc.ToString();

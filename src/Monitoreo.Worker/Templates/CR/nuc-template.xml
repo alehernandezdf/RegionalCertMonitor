@@ -43,7 +43,8 @@
             <Address>Escazú San Rafael Centro Comercial Distrito Cuatro Tercer piso oficina Lawgical</Address><!--OtrasSenas-->
         </AddressInfo>
         <BranchInfo>
-            <Code>000</Code>  <!--Sucursal-->
+            <!-- FIX::DRTI-6905::2026-09-02::AHL::Sucursal 000 -> 001 para consistencia con la Clave (este es el template que SI usa el worker) -->
+            <Code>001</Code>  <!--Sucursal-->
             <Name>DIGIFACT</Name> <!--NombreComercial-->
             <AdditionalBranchInfo>
                 <Info Name="Caja" Value="00071"/> <!--Caja NUC monitoreo unificado-->
