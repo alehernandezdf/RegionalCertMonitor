@@ -18,8 +18,8 @@ services:
       - ./src/Monitoreo.Worker/appsettings.PA.json:/app/appsettings.PA.json:ro
       - ./src/Monitoreo.Worker/appsettings.GT2.json:/app/appsettings.GT2.json:ro
       - ./src/Monitoreo.Worker/appsettings.Secrets.json:/app/appsettings.Secrets.json:ro
-      # FEAT::BE-672::2026-09-02::AHL::Templates movidos a la raiz del repo para facil acceso; la imagen tambien los hornea como respaldo
-      - ./Templates:/app/Templates:ro
+      # FEAT::BE-672::2026-09-02::AHL::Templates movidos a la raiz del repo (templates_xml_json) para facil acceso; dentro del contenedor sigue siendo /app/Templates
+      - ./templates_xml_json:/app/Templates:ro
     depends_on:
       postgres:
         condition: service_healthy
