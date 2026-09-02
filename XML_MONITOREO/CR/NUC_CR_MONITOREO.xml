@@ -43,7 +43,8 @@
             <Address>Escazú San Rafael Centro Comercial Distrito Cuatro Tercer piso oficina Lawgical</Address><!--OtrasSenas-->
         </AddressInfo>
         <BranchInfo>
-            <Code>000</Code>  <!--Sucursal-->
+            <!-- FIX::[DRTI-6905]::2026-09-02::JCF::Corregir codigo de sucursal de 000 a 001 para consistencia con Clave del comprobante -->
+            <Code>001</Code>  <!--Sucursal-->
             <Name>DIGIFACT</Name> <!--NombreComercial-->
             <AdditionalBranchInfo>
                 <Info Name="Caja" Value="00009"/> <!--Codigo de Terminal o punto de venta-->
