@@ -11,6 +11,11 @@
     <InternalsVisibleTo Include="Monitoreo.Worker.UnitTests" />
   </ItemGroup>
 
+  <!-- FEAT::BE-672::2026-09-02::AHL::Templates viven en la raiz del repo; se copian al output para dotnet run local y para que el publish los hornee en la imagen -->
+  <ItemGroup>
+    <Content Include="..\..\Templates\**\*" LinkBase="Templates" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="AWSSDK.CloudWatch" Version="4.0.5.3" />
     <PackageReference Include="AWSSDK.SecretsManager" Version="4.0.4.9" />
