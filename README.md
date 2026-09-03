@@ -6,7 +6,7 @@
 
 **Servicio unificado de monitoreo de certificación electrónica para Centroamérica y el Caribe**
 
-[![.NET 8+](https://img.shields.io/badge/.NET-8.0+-512BD4?style=flat-square&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![.NET 9](https://img.shields.io/badge/.NET-9.0-512BD4?style=flat-square&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white)](https://docs.docker.com/compose/)
 [![Grafana](https://img.shields.io/badge/Grafana-Dashboard-F46800?style=flat-square&logo=grafana&logoColor=white)](https://grafana.com/)
@@ -23,51 +23,48 @@
 
 ## 🎯 ¿Qué es?
 
-RegionalCertMonitor reemplaza **5 servicios de monitoreo independientes** (uno por país) con un único Worker Service en .NET 8+. Cada servicio anterior era una copia con código duplicado, credenciales hardcodeadas y sin tests.
+RegionalCertMonitor reemplaza **5 servicios de monitoreo independientes** (uno por país) con un único Worker Service en .NET 9. Cada servicio anterior era una copia con código duplicado, credenciales hardcodeadas y sin tests.
 
-Este proyecto unifica todo en una arquitectura limpia, configurable por país, con:
+Cada 60 segundos ejecuta certificaciones de prueba reales contra los endpoints productivos de cada país y guarda el resultado (OK/FAIL + tiempo de respuesta). Todo corre en un solo `docker compose` (worker + PostgreSQL + Grafana + pgAdmin).
 
-- 📡 Certificaciones de prueba ASMX (SOAP) y NUC (REST) por país
-- 💾 Persistencia de resultados en PostgreSQL
-- 📊 Dashboards en Grafana conectados directamente a PostgreSQL
-- 📧 Alertas por Email (Amazon SES) y WhatsApp con control manual
-- 🔒 Kill switch global y por país/canal para notificaciones
-- 🛡️ Resiliencia con Polly (retry, circuit breaker, timeouts)
-- 📝 Logging estructurado con Serilog → CloudWatch
+- 📡 Certificaciones de prueba **ASMX** (SOAP), **NUC** (REST) y **API V3** (REST, solo GT)
+- 💾 Persistencia de resultados en PostgreSQL con contadores secuenciales atómicos por país/tipo
+- 📊 Grafana incluido en el stack, con datasource y dashboards auto-provisionados
+- 📧 Alertas por Email (SMTP/Amazon SES) y WhatsApp (Meta Cloud API) **solo cuando hay fallos**
+- 👥 Destinatarios de alertas en base de datos, parametrizables **por país** y por canal, sin redeploy
+- 🧪 Disparador manual de alertas de prueba (`INSERT` en `alert_test_queue`)
+- 🛡️ Resiliencia con Polly (retry, circuit breaker, timeouts) y cooldown anti-spam configurable
+- 📝 Logging estructurado con Serilog (consola; CloudWatch opcional en modo Production)
 
 ## 🏗️ Arquitectura
 
 ```mermaid
 graph TB
-    subgraph "Docker Compose / AWS"
-        WS[Worker Service .NET 8+]
-        PG[(PostgreSQL)]
-        PGA[pgAdmin]
+    subgraph "Docker Compose (EC2)"
+        WS[Worker Service .NET 9]
+        PG[(PostgreSQL 16)]
+        GF[Grafana :3001]
+        PGA[pgAdmin :5050]
     end
 
-    subgraph "AWS Services"
-        SSM[SSM Parameter Store]
-        SM[Secrets Manager]
-        SES[Amazon SES]
-        CW[CloudWatch]
+    subgraph "Endpoints monitoreados"
+        ASMX[ASMX SOAP<br/>GT, GT2, SV, CR]
+        NUC[NUC REST<br/>GT, GT2, SV, CR, DO, PA]
+        API[API V3 REST<br/>GT]
     end
 
-    subgraph "External"
-        ASMX[Endpoints ASMX]
-        NUC[Endpoints NUC]
-        WA[WhatsApp API]
+    subgraph "Notificaciones"
+        SES[Email SMTP / SES]
+        WA[WhatsApp Cloud API]
     end
 
-    GF[Grafana]
-
-    WS -->|Certifica SOAP| ASMX
-    WS -->|Certifica REST| NUC
-    WS -->|Persiste| PG
-    WS -->|Config| SSM
-    WS -->|Secretos| SM
-    WS -->|Emails| SES
-    WS -->|Mensajes| WA
-    WS -->|Logs| CW
+    WS -->|Certifica| ASMX
+    WS -->|Certifica| NUC
+    WS -->|Certifica| API
+    WS -->|Persiste resultados| PG
+    WS -->|Alertas de fallo| SES
+    WS -->|Alertas de fallo| WA
+    WS -->|Lee destinatarios| PG
     GF -->|Queries| PG
     PGA -->|Admin| PG
 ```
@@ -76,125 +73,152 @@ graph TB
 
 | Componente | Tecnología |
 |---|---|
-| Runtime | .NET 8+ Worker Service (Linux containers) |
-| Base de datos | PostgreSQL 16 (Docker local / RDS producción) |
-| Dashboards | Grafana (instancia existente) |
-| Admin local | pgAdmin 4 |
-| Resiliencia | Polly v8+ (retry, circuit breaker, timeout) |
-| Logging | Serilog + CloudWatch sink |
-| Notificaciones | Amazon SES + WhatsApp Graph API v17.0 |
-| Config & Secrets | SSM Parameter Store + Secrets Manager |
+| Runtime | .NET 9 Worker Service (Linux containers, Alpine) |
+| Base de datos | PostgreSQL 16 (contenedor del mismo compose) |
+| Dashboards | Grafana (contenedor del mismo compose, puerto `3001`) |
+| Admin local | pgAdmin 4 (puerto `5050`) |
+| Resiliencia | Polly v8 (retry, circuit breaker, timeout) |
+| Logging | Serilog (consola; sink CloudWatch en Production) |
+| Notificaciones | Email vía SMTP (Amazon SES) + WhatsApp Graph API |
 | Testing | xUnit + FsCheck (property-based) + Testcontainers |
-| CI/CD | GitHub Actions → Amazon ECR |
-| IaC (opcional) | AWS CDK en C# (ECS Fargate) |
 | Driver DB | Npgsql con connection pooling |
 
 ## 🚀 Quick Start
 
 ### Prerrequisitos
 
-- [.NET 8+ SDK](https://dotnet.microsoft.com/download)
+- [.NET 9 SDK](https://dotnet.microsoft.com/download) (solo para desarrollo/tests)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 
 ### Levantar el stack completo
 
 ```bash
-# Clonar el repo
 git clone https://github.com/alehernandezdf/RegionalCertMonitor.git
 cd RegionalCertMonitor
-
-# Configurar variables de ambiente
-cp .env.example .env
-# Editar .env con tus credenciales
-
-# Levantar todo con Docker Compose
-docker compose up -d
+docker compose up -d --build
 ```
 
 Esto levanta:
-- **Worker Service** en .NET 8+ (monitoreo activo)
-- **PostgreSQL 16** en puerto `5432` (datos de monitoreo)
-- **pgAdmin** en puerto `5050` (admin visual para desarrollo)
+- **monitoreo-worker** — el Worker Service (monitoreo activo cada 60s)
+- **monitoreo-postgres** — PostgreSQL 16 en puerto `5432` (crea tablas con `init.sql` en el primer arranque)
+- **monitoreo-grafana** — Grafana en puerto `3001` con datasource y dashboards ya provisionados
+- **monitoreo-pgadmin** — pgAdmin en puerto `5050` con la conexión preconfigurada
+
+Las credenciales SMTP y de WhatsApp viven en `src/Monitoreo.Worker/appsettings.Secrets.json` (montado al contenedor; el repo es privado).
+
+> ⚠️ **Cuidado al correr localmente**: el worker apunta a los endpoints productivos y **puede enviar alertas reales al equipo**. Para pruebas locales usa un `docker-compose.override.yml` (no se versiona) que deshabilite países y/o notificaciones, y evita chocar contadores con el servidor.
+
+### Acceder a Grafana
+
+1. Abrir `http://localhost:3001` (en el server: puerto `3001` de la instancia)
+2. El dashboard principal carga como home por defecto
+3. Dashboards disponibles: **monitoreo** (regional) y **monitoreo-pais** (detalle por país)
 
 ### Acceder a pgAdmin
 
 1. Abrir `http://localhost:5050`
-2. La conexión a PostgreSQL ya está preconfigurada
-3. Usar las queries en `src/Monitoreo.Worker/Queries/test-queries.sql` para ver resultados
-
-### Conectar Grafana
-
-Agregar PostgreSQL como datasource en tu instancia de Grafana existente:
-- Host: `<host-postgresql>:5432`
-- Database: `monitoring`
-- User: `monitoreo`
-
-Importar el dashboard desde `src/Monitoreo.Worker/Grafana/dashboard.json`.
+2. La conexión a PostgreSQL ya está preconfigurada (`pgadmin-servers.json`)
+3. Usar las queries en `src/Monitoreo.Worker/Queries/` para revisar resultados
 
 ## 📁 Estructura del Proyecto
 
 ```
 RegionalCertMonitor/
 ├── src/
-│   ├── Monitoreo.Worker/              # Worker Service principal
-│   │   ├── Workers/                   # BackgroundService por país
-│   │   ├── Services/
-│   │   │   ├── Certification/         # ASMX + NUC
-│   │   │   ├── Notification/          # Email + WhatsApp + Gate
-│   │   │   ├── Persistence/           # PostgreSQL repository
-│   │   │   ├── Configuration/         # SSM + Secrets Manager
-│   │   │   ├── Retention/             # Limpieza automática
-│   │   │   └── Orchestration/         # Coordinador de ciclos
-│   │   ├── Models/                    # Domain models
-│   │   ├── Templates/                 # XML por país (GT,SV,DO,CR,PA)
-│   │   ├── Database/                  # init.sql
-│   │   ├── Grafana/                   # Dashboard JSON
-│   │   └── Queries/                   # SQL para pruebas locales
-│   └── Monitoreo.Infrastructure/      # CDK Stack (opcional)
+│   └── Monitoreo.Worker/              # Worker Service principal
+│       ├── Workers/                   # CountryMonitoringWorker (uno por país) + TestAlertWorker
+│       ├── Services/
+│       │   ├── Certification/         # ASMX + NUC + API V3, firma PFX, QR, CUFE
+│       │   ├── Notification/          # Email + WhatsApp + gate (flags/cooldown) + destinatarios en BD
+│       │   ├── Persistence/           # Repositorio PostgreSQL + contadores secuenciales
+│       │   ├── Configuration/         # Config por país (appsettings.{PAIS}.json / AWS)
+│       │   ├── Observability/         # Métricas (consola / CloudWatch)
+│       │   ├── Orchestration/         # Coordinador de ciclos y alertas
+│       │   └── Retention/             # Limpieza automática de datos viejos
+│       ├── Models/                    # Domain models
+│       ├── Database/                  # init.sql (tablas, índices, seeds)
+│       ├── Grafana/                   # Dashboard JSON (referencia)
+│       ├── Queries/                   # SQL para revisión manual
+│       └── appsettings*.json          # Config global + por país + Secrets
+├── templates_xml_json/                # ⭐ Templates XML/JSON por país (fuente de verdad)
+│   ├── GT/  ├── SV/  ├── CR/  ├── DO/  └── PA/
+├── grafana/
+│   ├── provisioning/                  # Datasource + carga automática de dashboards
+│   ├── dashboards/                    # monitoreo.json + monitoreo-pais.json
+│   └── flags/                         # Banderas usadas por los dashboards
 ├── tests/
 │   ├── Monitoreo.Worker.UnitTests/    # xUnit + FsCheck
 │   └── Monitoreo.Worker.IntegrationTests/  # Testcontainers
-├── .github/workflows/                 # CI/CD
+├── infra/Monitoreo.Infrastructure/    # CDK Stack (opcional, no desplegado)
+├── docs/                              # requirements.md, design.md, tasks.md
+├── .github/workflows/                 # CI
 ├── docker-compose.yml
+├── Dockerfile
 ├── pgadmin-servers.json
-└── docs/                              # Especificaciones
-    ├── requirements.md
-    ├── design.md
-    └── tasks.md
+└── ServicioMonitoreo.sln
 ```
+
+### 📄 Templates (`templates_xml_json/`)
+
+Los templates son la **fuente de verdad** de los datos fijos de cada documento (emisor, sucursal, establecimiento, etc.). El código solo inyecta las partes dinámicas: fecha de emisión, correlativo/secuencial (contador atómico en BD) y GUID donde aplica.
+
+- Se montan al contenedor como `/app/Templates` (docker-compose) y además se hornean en la imagen como respaldo.
+- Si un país cambia datos del documento (ej. CR cambió sucursal 000→001), **se edita el template y se recrea el contenedor** — sin tocar código.
 
 ## 🌎 Países Soportados
 
-| País | Código | ASMX | NUC |
-|---|---|---|---|
-| 🇬🇹 Guatemala | GT | ✅ | ✅ |
-| 🇸🇻 El Salvador | SV | ✅ | ✅ |
-| 🇩🇴 República Dominicana | DO | ✅ | ✅ |
-| 🇨🇷 Costa Rica | CR | ✅ | ✅ |
-| 🇵🇦 Panamá | PA | ✅ | ✅ |
+| País | Código | ASMX | NUC | API V3 |
+|---|---|---|---|---|
+| 🇬🇹 Guatemala | GT | ✅ | ✅ | ✅ |
+| 🇬🇹 Guatemala (endpoint alterno `.com.gt`) | GT2 | ✅ | ✅ | — |
+| 🇸🇻 El Salvador | SV | ✅ | ✅ | — |
+| 🇨🇷 Costa Rica | CR | ✅ | ✅ | — |
+| 🇩🇴 República Dominicana | DO | — | ✅ | — |
+| 🇵🇦 Panamá | PA | — | ✅ | — |
 
-Cada país tiene su propia configuración de endpoints, intervalos, plantillas XML y destinatarios de alertas.
+Cada país tiene su propio `appsettings.{PAIS}.json` con endpoints, credenciales de referencia, intervalo, umbral de alerta y flags de notificación.
 
-## 🔔 Control de Notificaciones
+## 🔔 Alertas y Notificaciones
 
-El sistema incluye control manual granular sobre las notificaciones:
+Solo se alerta cuando una certificación **falla** (error o rechazo); la lentitud se registra pero no alerta.
 
-- **Kill switch global**: Desactiva todas las notificaciones con un solo parámetro en SSM
-- **Toggle por país/canal**: Activa o desactiva Email y WhatsApp independientemente por país
-- **Cooldown configurable**: Evita spam cuando un servicio está intermitente
-- **Sin reinicio**: Los cambios en SSM se detectan en el siguiente ciclo automáticamente
+### Destinatarios en base de datos (`notification_recipients`)
 
-El monitoreo y la persistencia de datos **siempre continúan**, independientemente del estado de las notificaciones.
+Se agregan/quitan destinatarios **sin redeploy**, parametrizables por país y canal:
+
+```sql
+-- Recibe alertas de TODOS los países:
+INSERT INTO notification_recipients (country, channel, destination) VALUES ('*', 'email', 'nuevo@digifact.com');
+
+-- Recibe alertas SOLO de Panamá:
+INSERT INTO notification_recipients (country, channel, destination) VALUES ('PA', 'whatsapp', '50761234567');
+
+-- Desactivar sin borrar:
+UPDATE notification_recipients SET enabled = false WHERE destination = 'fulano@digifact.com';
+```
+
+Si la BD no responde, el worker cae de vuelta a las listas de `appsettings.{PAIS}.json`.
+
+### Prueba manual de alertas (`alert_test_queue`)
+
+```sql
+INSERT INTO alert_test_queue (channel) VALUES ('email');  -- 'email' | 'whatsapp' | 'all'
+```
+
+El worker la consume en ≤15 segundos y envía una alerta de PRUEBA a los destinatarios globales (`country = '*'`).
+
+### Controles adicionales
+
+- **Flags por país/canal** (`NotificationsEmailEnabled` / `NotificationsWhatsAppEnabled` en appsettings)
+- **Cooldown configurable** por país para evitar spam cuando un servicio está intermitente
+- El monitoreo y la persistencia **siempre continúan**, independientemente del estado de las notificaciones
 
 ## 📊 Dashboards
 
-El dashboard de Grafana incluye:
+Grafana se auto-provisiona al levantar el compose (datasource PostgreSQL + dashboards):
 
-- Disponibilidad por país (% éxito últimas 24h)
-- Tiempos de respuesta (series de tiempo por país/tipo)
-- Alertas activas (últimos fallos y degradaciones)
-- Tendencias (promedios por hora y día)
-- Filtros interactivos por país, tipo de certificación y rango de tiempo
+- **monitoreo.json** — vista regional: disponibilidad por país, tiempos de respuesta, últimos fallos
+- **monitoreo-pais.json** — detalle por país con filtros por tipo de certificación y rango de tiempo
 
 ## 🧪 Testing
 
@@ -206,7 +230,7 @@ dotnet test tests/Monitoreo.Worker.UnitTests/
 dotnet test tests/Monitoreo.Worker.IntegrationTests/
 ```
 
-El proyecto usa **property-based testing** con FsCheck para validar 14 propiedades de correctitud formales que cubren desde la lógica de certificación hasta el control de notificaciones.
+El proyecto usa **property-based testing** con FsCheck para validar propiedades de correctitud que cubren desde la lógica de certificación hasta el control de notificaciones.
 
 ## 📖 Documentación
 
@@ -215,6 +239,8 @@ El proyecto usa **property-based testing** con FsCheck para validar 14 propiedad
 | [Requirements](docs/requirements.md) | Requerimientos funcionales y criterios de aceptación |
 | [Design](docs/design.md) | Arquitectura, componentes, modelos de datos y propiedades de correctitud |
 | [Tasks](docs/tasks.md) | Plan de implementación con tareas detalladas |
+
+> 🔄 **Mantener actualizado**: si un cambio mueve carpetas, agrega tablas, países o features, este README debe actualizarse en el mismo PR.
 
 ## 🏢 Digifact TaxTech
 
