@@ -49,7 +49,7 @@ graph TB
 
     subgraph "Endpoints monitoreados"
         ASMX[ASMX SOAP<br/>GT, GT2, SV, CR]
-        NUC[NUC REST<br/>GT, GT2, SV, CR, DO, PA]
+        NUC[NUC REST<br/>GT, SV, CR, DO, PA]
         API[API V3 REST<br/>GT]
     end
 
@@ -170,7 +170,7 @@ Los templates son la **fuente de verdad** de los datos fijos de cada documento (
 | País | Código | ASMX | NUC | API V3 |
 |---|---|---|---|---|
 | 🇬🇹 Guatemala | GT | ✅ | ✅ | ✅ |
-| 🇬🇹 Guatemala (endpoint alterno `.com.gt`) | GT2 | ✅ | ✅ | — |
+| 🇬🇹 Guatemala (endpoint alterno `.com.gt`) | GT2 | ✅ | — | — |
 | 🇸🇻 El Salvador | SV | ✅ | ✅ | — |
 | 🇨🇷 Costa Rica | CR | ✅ | ✅ | — |
 | 🇩🇴 República Dominicana | DO | — | ✅ | — |
