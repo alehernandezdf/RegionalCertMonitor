@@ -47,6 +47,13 @@ public record CountryConfig
     public string? ApiUsernameParam { get; init; }
     public string? ApiResponseFormat { get; init; } // "XML" o "JSON"
 
+    // FEAT::BE-672::2026-09-18::AHL::Bases de numeracion NUC parametrizables por sonda.
+    // Defaults = valores historicos; las sondas de ruta .pais (SV2/DO2/PA2) usan bases propias para no colisionar con su sonda .com hermana.
+    public long NucConsecutivoBase { get; init; } = 9900000;           // Consecutivo (CR) / Secuencia (DO), 10 digitos
+    public long NucSecuencialBase { get; init; } = 400000000000;       // Secuencial (SV), 15 digitos
+    public long NucNumeroDFBase { get; init; } = 1140000000;           // NumeroDF (PA)
+    public long NucCodigoSeguridadBase { get; init; } = 800000;        // CodigoSeguridad (PA), 9 digitos
+
     // ASMX transaction type (varía por país)
     public string AsmxTransactionType { get; init; } = "CERTIFICATE_FE";
     public string? AsmxUsernameFormat { get; init; }

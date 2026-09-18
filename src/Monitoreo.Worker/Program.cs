@@ -41,6 +41,9 @@ try
         .AddJsonFile("appsettings.CR.json", optional: true, reloadOnChange: true)
         .AddJsonFile("appsettings.PA.json", optional: true, reloadOnChange: true)
         .AddJsonFile("appsettings.GT2.json", optional: true, reloadOnChange: true)
+        .AddJsonFile("appsettings.SV2.json", optional: true, reloadOnChange: true)
+        .AddJsonFile("appsettings.DO2.json", optional: true, reloadOnChange: true)
+        .AddJsonFile("appsettings.PA2.json", optional: true, reloadOnChange: true)
         .AddJsonFile("appsettings.Secrets.json", optional: true, reloadOnChange: true);
 
     var monitoringEnv = builder.Configuration["Monitoring:Environment"] ?? "Development";

@@ -108,9 +108,12 @@ public class EmailNotificationService : INotificationService
         "GT" => "GUATEMALA",
         "GT2" => "GUATEMALA",
         "SV" => "EL SALVADOR",
+        "SV2" => "EL SALVADOR",
         "CR" => "COSTA RICA",
         "DO" => "REPUBLICA DOMINICANA",
+        "DO2" => "REPUBLICA DOMINICANA",
         "PA" => "PANAMA",
+        "PA2" => "PANAMA",
         _ => code
     };
 }

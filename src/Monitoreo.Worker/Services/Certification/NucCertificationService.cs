@@ -160,7 +160,10 @@ public class NucCertificationService : ICertificationService
     private async Task<string> LoginAndGetTokenAsync(CountryConfig config, CancellationToken ct)
     {
         var username = BuildNucUsername(config);
-        var password = _configuration[$"Secrets:{config.CountryCode}:NucCredentialPassword"] ?? "placeholder";
+        // Las sondas de ruta .pais (GT2/SV2/DO2/PA2) comparten credenciales con su pais base: fallback quitando el sufijo 2
+        var password = _configuration[$"Secrets:{config.CountryCode}:NucCredentialPassword"]
+            ?? _configuration[$"Secrets:{config.CountryCode.TrimEnd('2')}:NucCredentialPassword"]
+            ?? "placeholder";
         var client = _httpClientFactory.CreateClient("NucClient");
 
         var loginPayload = JsonSerializer.Serialize(new { Username = username, Password = password });
@@ -294,17 +297,18 @@ public class NucCertificationService : ICertificationService
         if (xml.Contains("<GUID>"))
             xml = _guidRegex.Replace(xml, $"<GUID>{Guid.NewGuid().ToString().ToUpper()}</GUID>");
 
+        // FEAT::BE-672::2026-09-18::AHL::Bases parametrizables desde config (defaults = valores historicos) para que las sondas .pais no colisionen con las .com
         // Consecutivo/Secuencia (10 dígitos)
-        xml = _consecutivoAttrRegex.Replace(xml, $"${{1}}{(9900000 + consecutivo).ToString("D10")}${{2}}");
+        xml = _consecutivoAttrRegex.Replace(xml, $"${{1}}{(config.NucConsecutivoBase + consecutivo).ToString("D10")}${{2}}");
 
         // Secuencial SV (15 dígitos)
-        xml = _secuencialAttrRegex.Replace(xml, $"${{1}}{(400000000000 + consecutivo).ToString("D15")}${{2}}");
+        xml = _secuencialAttrRegex.Replace(xml, $"${{1}}{(config.NucSecuencialBase + consecutivo).ToString("D15")}${{2}}");
 
-        // NumeroDF y CodigoSeguridad solo PA
-        if (config.CountryCode == "PA")
+        // NumeroDF y CodigoSeguridad solo PA (incluye la sonda PA2 de ruta .pais)
+        if (config.CountryCode.StartsWith("PA"))
         {
-            xml = _numeroDFAttrRegex.Replace(xml, $"${{1}}{(1140000000 + consecutivo)}${{2}}");
-            xml = _codigoSeguridadAttrRegex.Replace(xml, $"${{1}}{(800000 + consecutivo).ToString("D9")}${{2}}");
+            xml = _numeroDFAttrRegex.Replace(xml, $"${{1}}{(config.NucNumeroDFBase + consecutivo)}${{2}}");
+            xml = _codigoSeguridadAttrRegex.Replace(xml, $"${{1}}{(config.NucCodigoSeguridadBase + consecutivo).ToString("D9")}${{2}}");
         }
 
         return xml;
