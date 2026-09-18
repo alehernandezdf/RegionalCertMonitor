@@ -175,10 +175,10 @@
           "thresholds": { "mode": "absolute", "steps": [ { "value": null, "color": "transparent" }, { "value": 0.0001, "color": "rgba(0,200,0,0.07)" }, { "value": 5, "color": "rgba(255,0,0,0.15)" } ] }
         },
         "overrides": [
-          { "matcher": { "id": "byName", "options": "GT NUC .com.gt" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#3274D9" } }] },
-          { "matcher": { "id": "byName", "options": "SV NUC .com.sv" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#E0B400" } }] },
-          { "matcher": { "id": "byName", "options": "DO NUC .com.do" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#FF780A" } }] },
-          { "matcher": { "id": "byName", "options": "PA NUC .com.pa" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#A352CC" } }] }
+          { "matcher": { "id": "byName", "options": "GT NUC .com.gt" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#8AB8FF" } }] },
+          { "matcher": { "id": "byName", "options": "SV NUC .com.sv" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#FFFFFF" } }] },
+          { "matcher": { "id": "byName", "options": "DO NUC .com.do" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#1F60C4" } }] },
+          { "matcher": { "id": "byName", "options": "PA NUC .com.pa" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#F2495C" } }] }
         ]
       },
       "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["min","max","mean","lastNotNull"] }, "tooltip": { "mode": "multi" } }

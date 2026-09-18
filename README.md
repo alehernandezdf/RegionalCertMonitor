@@ -179,7 +179,7 @@ Cada país tiene su propio `appsettings.{PAIS}.json` con endpoints, credenciales
 
 ### 🛰️ Sondas de ruta `.pais` (diagnóstico, sin alertas)
 
-Además de las sondas principales (que van por dominios `.com`, la ruta estable), existen sondas gemelas que vigilan **las rutas por dominio de país** — históricamente inestables (resets de conexión intermitentes, HTTP 520). No alertan (flags de notificación apagados); se observan en el dashboard **Monitoreo Equipo** y sirven de evidencia para infraestructura. CR no tiene ruta `.pais` (solo existe `.com`).
+Además de las sondas principales (que van por dominios `.com`, la ruta estable), existen sondas gemelas que vigilan **las rutas por dominio de país** — históricamente inestables (resets de conexión intermitentes, HTTP 520). Sus alertas van identificadas con **"(SONDA .PAIS)"** en el correo y el WhatsApp para distinguirlas del servicio principal; se pueden silenciar por sonda con los flags `NotificationsEmailEnabled`/`NotificationsWhatsAppEnabled` de su appsettings. Se observan en el dashboard **Monitoreo Equipo** y sirven de evidencia para infraestructura. CR no tiene ruta `.pais` (solo existe `.com`).
 
 | Sonda | Ruta vigilada | Tipos | Numeración propia (no colisiona con la sonda `.com`) |
 |---|---|---|---|
@@ -188,7 +188,7 @@ Además de las sondas principales (que van por dominios `.com`, la ruta estable)
 | DO2 | `apinuc.digifact.com.do` | NUC | `NucConsecutivoBase: 99000000` |
 | PA2 | `apinuc.digifact.com.pa` | NUC | `NucNumeroDFBase: 1150000000`, `NucCodigoSeguridadBase: 900000000` |
 
-Las bases de numeración NUC son parametrizables por sonda en su appsettings (defaults = valores históricos). Para encender alertas de una sonda `.pais`: poner `NotificationsEmailEnabled`/`NotificationsWhatsAppEnabled` en `true` en su `appsettings.{SONDA}.json` y recrear el contenedor.
+Las bases de numeración NUC son parametrizables por sonda en su appsettings (defaults = valores históricos).
 
 ## 🔔 Alertas y Notificaciones
 
