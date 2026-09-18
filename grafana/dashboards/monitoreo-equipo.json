@@ -15,7 +15,10 @@
       "targets": [
         { "refId": "A", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"ASMX\" FROM monitoring_results WHERE country = 'GT' AND certification_type = 'ASMX' AND $__timeFilter(created_at) ORDER BY created_at" },
         { "refId": "B", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"NUC\" FROM monitoring_results WHERE country = 'GT' AND certification_type = 'NUC' AND $__timeFilter(created_at) ORDER BY created_at" },
-        { "refId": "C", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"API\" FROM monitoring_results WHERE country = 'GT' AND certification_type = 'API' AND $__timeFilter(created_at) ORDER BY created_at" }
+        { "refId": "C", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"API\" FROM monitoring_results WHERE country = 'GT' AND certification_type = 'API' AND $__timeFilter(created_at) ORDER BY created_at" },
+        { "refId": "D", "format": "time_series", "rawSql": "SELECT created_at AS time, CASE WHEN NOT ok OR NOT prev_ok OR NOT next_ok THEN val END AS \"FALLO ASMX\" FROM (SELECT created_at, transaction_time_ms / 1000.0 AS val, result_status AS ok, COALESCE(LAG(result_status) OVER (ORDER BY created_at), true) AS prev_ok, COALESCE(LEAD(result_status) OVER (ORDER BY created_at), true) AS next_ok FROM monitoring_results WHERE country = 'GT' AND certification_type = 'ASMX' AND $__timeFilter(created_at)) t ORDER BY created_at" },
+        { "refId": "E", "format": "time_series", "rawSql": "SELECT created_at AS time, CASE WHEN NOT ok OR NOT prev_ok OR NOT next_ok THEN val END AS \"FALLO NUC\" FROM (SELECT created_at, transaction_time_ms / 1000.0 AS val, result_status AS ok, COALESCE(LAG(result_status) OVER (ORDER BY created_at), true) AS prev_ok, COALESCE(LEAD(result_status) OVER (ORDER BY created_at), true) AS next_ok FROM monitoring_results WHERE country = 'GT' AND certification_type = 'NUC' AND $__timeFilter(created_at)) t ORDER BY created_at" },
+        { "refId": "F", "format": "time_series", "rawSql": "SELECT created_at AS time, CASE WHEN NOT ok OR NOT prev_ok OR NOT next_ok THEN val END AS \"FALLO API\" FROM (SELECT created_at, transaction_time_ms / 1000.0 AS val, result_status AS ok, COALESCE(LAG(result_status) OVER (ORDER BY created_at), true) AS prev_ok, COALESCE(LEAD(result_status) OVER (ORDER BY created_at), true) AS next_ok FROM monitoring_results WHERE country = 'GT' AND certification_type = 'API' AND $__timeFilter(created_at)) t ORDER BY created_at" }
       ],
       "fieldConfig": {
         "defaults": {
@@ -26,7 +29,8 @@
         "overrides": [
           { "matcher": { "id": "byName", "options": "ASMX" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#3274D9" } }] },
           { "matcher": { "id": "byName", "options": "NUC" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#E0B400" } }] },
-          { "matcher": { "id": "byName", "options": "API" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#56A64B" } }] }
+          { "matcher": { "id": "byName", "options": "API" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#56A64B" } }] },
+          { "matcher": { "id": "byRegexp", "options": "/^FALLO/" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#FF2E2E" } }, { "id": "custom.lineWidth", "value": 3 }, { "id": "custom.hideFrom", "value": { "legend": true, "tooltip": false, "viz": false } }] }
         ]
       },
       "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["min","max","mean","lastNotNull"] }, "tooltip": { "mode": "multi" } }
@@ -39,7 +43,9 @@
       "datasource": { "type": "grafana-postgresql-datasource", "uid": "monitoreo-pg" },
       "targets": [
         { "refId": "A", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"ASMX\" FROM monitoring_results WHERE country = 'SV' AND certification_type = 'ASMX' AND $__timeFilter(created_at) ORDER BY created_at" },
-        { "refId": "B", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"NUC\" FROM monitoring_results WHERE country = 'SV' AND certification_type = 'NUC' AND $__timeFilter(created_at) ORDER BY created_at" }
+        { "refId": "B", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"NUC\" FROM monitoring_results WHERE country = 'SV' AND certification_type = 'NUC' AND $__timeFilter(created_at) ORDER BY created_at" },
+        { "refId": "C", "format": "time_series", "rawSql": "SELECT created_at AS time, CASE WHEN NOT ok OR NOT prev_ok OR NOT next_ok THEN val END AS \"FALLO ASMX\" FROM (SELECT created_at, transaction_time_ms / 1000.0 AS val, result_status AS ok, COALESCE(LAG(result_status) OVER (ORDER BY created_at), true) AS prev_ok, COALESCE(LEAD(result_status) OVER (ORDER BY created_at), true) AS next_ok FROM monitoring_results WHERE country = 'SV' AND certification_type = 'ASMX' AND $__timeFilter(created_at)) t ORDER BY created_at" },
+        { "refId": "D", "format": "time_series", "rawSql": "SELECT created_at AS time, CASE WHEN NOT ok OR NOT prev_ok OR NOT next_ok THEN val END AS \"FALLO NUC\" FROM (SELECT created_at, transaction_time_ms / 1000.0 AS val, result_status AS ok, COALESCE(LAG(result_status) OVER (ORDER BY created_at), true) AS prev_ok, COALESCE(LEAD(result_status) OVER (ORDER BY created_at), true) AS next_ok FROM monitoring_results WHERE country = 'SV' AND certification_type = 'NUC' AND $__timeFilter(created_at)) t ORDER BY created_at" }
       ],
       "fieldConfig": {
         "defaults": {
@@ -49,7 +55,8 @@
         },
         "overrides": [
           { "matcher": { "id": "byName", "options": "ASMX" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#3274D9" } }] },
-          { "matcher": { "id": "byName", "options": "NUC" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#E0B400" } }] }
+          { "matcher": { "id": "byName", "options": "NUC" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#E0B400" } }] },
+          { "matcher": { "id": "byRegexp", "options": "/^FALLO/" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#FF2E2E" } }, { "id": "custom.lineWidth", "value": 3 }, { "id": "custom.hideFrom", "value": { "legend": true, "tooltip": false, "viz": false } }] }
         ]
       },
       "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["min","max","mean","lastNotNull"] }, "tooltip": { "mode": "multi" } }
@@ -62,7 +69,8 @@
       "datasource": { "type": "grafana-postgresql-datasource", "uid": "monitoreo-pg" },
       "targets": [
         { "refId": "A", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"ASMX\" FROM monitoring_results WHERE country = 'PA' AND certification_type = 'ASMX' AND $__timeFilter(created_at) ORDER BY created_at" },
-        { "refId": "B", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"NUC\" FROM monitoring_results WHERE country = 'PA' AND certification_type = 'NUC' AND $__timeFilter(created_at) ORDER BY created_at" }
+        { "refId": "B", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"NUC\" FROM monitoring_results WHERE country = 'PA' AND certification_type = 'NUC' AND $__timeFilter(created_at) ORDER BY created_at" },
+        { "refId": "C", "format": "time_series", "rawSql": "SELECT created_at AS time, CASE WHEN NOT ok OR NOT prev_ok OR NOT next_ok THEN val END AS \"FALLO NUC\" FROM (SELECT created_at, transaction_time_ms / 1000.0 AS val, result_status AS ok, COALESCE(LAG(result_status) OVER (ORDER BY created_at), true) AS prev_ok, COALESCE(LEAD(result_status) OVER (ORDER BY created_at), true) AS next_ok FROM monitoring_results WHERE country = 'PA' AND certification_type = 'NUC' AND $__timeFilter(created_at)) t ORDER BY created_at" }
       ],
       "fieldConfig": {
         "defaults": {
@@ -72,7 +80,8 @@
         },
         "overrides": [
           { "matcher": { "id": "byName", "options": "ASMX" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#3274D9" } }] },
-          { "matcher": { "id": "byName", "options": "NUC" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#E0B400" } }] }
+          { "matcher": { "id": "byName", "options": "NUC" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#E0B400" } }] },
+          { "matcher": { "id": "byRegexp", "options": "/^FALLO/" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#FF2E2E" } }, { "id": "custom.lineWidth", "value": 3 }, { "id": "custom.hideFrom", "value": { "legend": true, "tooltip": false, "viz": false } }] }
         ]
       },
       "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["min","max","mean","lastNotNull"] }, "tooltip": { "mode": "multi" } }
@@ -85,7 +94,8 @@
       "datasource": { "type": "grafana-postgresql-datasource", "uid": "monitoreo-pg" },
       "targets": [
         { "refId": "A", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"ASMX\" FROM monitoring_results WHERE country = 'DO' AND certification_type = 'ASMX' AND $__timeFilter(created_at) ORDER BY created_at" },
-        { "refId": "B", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"NUC\" FROM monitoring_results WHERE country = 'DO' AND certification_type = 'NUC' AND $__timeFilter(created_at) ORDER BY created_at" }
+        { "refId": "B", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"NUC\" FROM monitoring_results WHERE country = 'DO' AND certification_type = 'NUC' AND $__timeFilter(created_at) ORDER BY created_at" },
+        { "refId": "C", "format": "time_series", "rawSql": "SELECT created_at AS time, CASE WHEN NOT ok OR NOT prev_ok OR NOT next_ok THEN val END AS \"FALLO NUC\" FROM (SELECT created_at, transaction_time_ms / 1000.0 AS val, result_status AS ok, COALESCE(LAG(result_status) OVER (ORDER BY created_at), true) AS prev_ok, COALESCE(LEAD(result_status) OVER (ORDER BY created_at), true) AS next_ok FROM monitoring_results WHERE country = 'DO' AND certification_type = 'NUC' AND $__timeFilter(created_at)) t ORDER BY created_at" }
       ],
       "fieldConfig": {
         "defaults": {
@@ -95,7 +105,8 @@
         },
         "overrides": [
           { "matcher": { "id": "byName", "options": "ASMX" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#3274D9" } }] },
-          { "matcher": { "id": "byName", "options": "NUC" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#E0B400" } }] }
+          { "matcher": { "id": "byName", "options": "NUC" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#E0B400" } }] },
+          { "matcher": { "id": "byRegexp", "options": "/^FALLO/" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#FF2E2E" } }, { "id": "custom.lineWidth", "value": 3 }, { "id": "custom.hideFrom", "value": { "legend": true, "tooltip": false, "viz": false } }] }
         ]
       },
       "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["min","max","mean","lastNotNull"] }, "tooltip": { "mode": "multi" } }
@@ -108,7 +119,9 @@
       "datasource": { "type": "grafana-postgresql-datasource", "uid": "monitoreo-pg" },
       "targets": [
         { "refId": "A", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"ASMX\" FROM monitoring_results WHERE country = 'CR' AND certification_type = 'ASMX' AND $__timeFilter(created_at) ORDER BY created_at" },
-        { "refId": "B", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"NUC\" FROM monitoring_results WHERE country = 'CR' AND certification_type = 'NUC' AND $__timeFilter(created_at) ORDER BY created_at" }
+        { "refId": "B", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"NUC\" FROM monitoring_results WHERE country = 'CR' AND certification_type = 'NUC' AND $__timeFilter(created_at) ORDER BY created_at" },
+        { "refId": "C", "format": "time_series", "rawSql": "SELECT created_at AS time, CASE WHEN NOT ok OR NOT prev_ok OR NOT next_ok THEN val END AS \"FALLO ASMX\" FROM (SELECT created_at, transaction_time_ms / 1000.0 AS val, result_status AS ok, COALESCE(LAG(result_status) OVER (ORDER BY created_at), true) AS prev_ok, COALESCE(LEAD(result_status) OVER (ORDER BY created_at), true) AS next_ok FROM monitoring_results WHERE country = 'CR' AND certification_type = 'ASMX' AND $__timeFilter(created_at)) t ORDER BY created_at" },
+        { "refId": "D", "format": "time_series", "rawSql": "SELECT created_at AS time, CASE WHEN NOT ok OR NOT prev_ok OR NOT next_ok THEN val END AS \"FALLO NUC\" FROM (SELECT created_at, transaction_time_ms / 1000.0 AS val, result_status AS ok, COALESCE(LAG(result_status) OVER (ORDER BY created_at), true) AS prev_ok, COALESCE(LEAD(result_status) OVER (ORDER BY created_at), true) AS next_ok FROM monitoring_results WHERE country = 'CR' AND certification_type = 'NUC' AND $__timeFilter(created_at)) t ORDER BY created_at" }
       ],
       "fieldConfig": {
         "defaults": {
@@ -118,7 +131,8 @@
         },
         "overrides": [
           { "matcher": { "id": "byName", "options": "ASMX" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#3274D9" } }] },
-          { "matcher": { "id": "byName", "options": "NUC" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#E0B400" } }] }
+          { "matcher": { "id": "byName", "options": "NUC" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#E0B400" } }] },
+          { "matcher": { "id": "byRegexp", "options": "/^FALLO/" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#FF2E2E" } }, { "id": "custom.lineWidth", "value": 3 }, { "id": "custom.hideFrom", "value": { "legend": true, "tooltip": false, "viz": false } }] }
         ]
       },
       "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["min","max","mean","lastNotNull"] }, "tooltip": { "mode": "multi" } }
@@ -166,7 +180,11 @@
         { "refId": "B", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"GT NUC .com.gt\" FROM monitoring_results WHERE country = 'GT2' AND certification_type = 'NUC' AND $__timeFilter(created_at) ORDER BY created_at" },
         { "refId": "C", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"SV NUC .com.sv\" FROM monitoring_results WHERE country = 'SV2' AND certification_type = 'NUC' AND $__timeFilter(created_at) ORDER BY created_at" },
         { "refId": "D", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"DO NUC .com.do\" FROM monitoring_results WHERE country = 'DO2' AND certification_type = 'NUC' AND $__timeFilter(created_at) ORDER BY created_at" },
-        { "refId": "E", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"PA NUC .com.pa\" FROM monitoring_results WHERE country = 'PA2' AND certification_type = 'NUC' AND $__timeFilter(created_at) ORDER BY created_at" }
+        { "refId": "E", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"PA NUC .com.pa\" FROM monitoring_results WHERE country = 'PA2' AND certification_type = 'NUC' AND $__timeFilter(created_at) ORDER BY created_at" },
+        { "refId": "F", "format": "time_series", "rawSql": "SELECT created_at AS time, CASE WHEN NOT ok OR NOT prev_ok OR NOT next_ok THEN val END AS \"FALLO GT\" FROM (SELECT created_at, transaction_time_ms / 1000.0 AS val, result_status AS ok, COALESCE(LAG(result_status) OVER (ORDER BY created_at), true) AS prev_ok, COALESCE(LEAD(result_status) OVER (ORDER BY created_at), true) AS next_ok FROM monitoring_results WHERE country = 'GT2' AND certification_type = 'NUC' AND $__timeFilter(created_at)) t ORDER BY created_at" },
+        { "refId": "G", "format": "time_series", "rawSql": "SELECT created_at AS time, CASE WHEN NOT ok OR NOT prev_ok OR NOT next_ok THEN val END AS \"FALLO SV\" FROM (SELECT created_at, transaction_time_ms / 1000.0 AS val, result_status AS ok, COALESCE(LAG(result_status) OVER (ORDER BY created_at), true) AS prev_ok, COALESCE(LEAD(result_status) OVER (ORDER BY created_at), true) AS next_ok FROM monitoring_results WHERE country = 'SV2' AND certification_type = 'NUC' AND $__timeFilter(created_at)) t ORDER BY created_at" },
+        { "refId": "H", "format": "time_series", "rawSql": "SELECT created_at AS time, CASE WHEN NOT ok OR NOT prev_ok OR NOT next_ok THEN val END AS \"FALLO DO\" FROM (SELECT created_at, transaction_time_ms / 1000.0 AS val, result_status AS ok, COALESCE(LAG(result_status) OVER (ORDER BY created_at), true) AS prev_ok, COALESCE(LEAD(result_status) OVER (ORDER BY created_at), true) AS next_ok FROM monitoring_results WHERE country = 'DO2' AND certification_type = 'NUC' AND $__timeFilter(created_at)) t ORDER BY created_at" },
+        { "refId": "I", "format": "time_series", "rawSql": "SELECT created_at AS time, CASE WHEN NOT ok OR NOT prev_ok OR NOT next_ok THEN val END AS \"FALLO PA\" FROM (SELECT created_at, transaction_time_ms / 1000.0 AS val, result_status AS ok, COALESCE(LAG(result_status) OVER (ORDER BY created_at), true) AS prev_ok, COALESCE(LEAD(result_status) OVER (ORDER BY created_at), true) AS next_ok FROM monitoring_results WHERE country = 'PA2' AND certification_type = 'NUC' AND $__timeFilter(created_at)) t ORDER BY created_at" }
       ],
       "fieldConfig": {
         "defaults": {
@@ -178,7 +196,8 @@
           { "matcher": { "id": "byName", "options": "GT NUC .com.gt" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#8AB8FF" } }] },
           { "matcher": { "id": "byName", "options": "SV NUC .com.sv" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#FFFFFF" } }] },
           { "matcher": { "id": "byName", "options": "DO NUC .com.do" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#1F60C4" } }] },
-          { "matcher": { "id": "byName", "options": "PA NUC .com.pa" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#F2495C" } }] }
+          { "matcher": { "id": "byName", "options": "PA NUC .com.pa" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#F2495C" } }] },
+          { "matcher": { "id": "byRegexp", "options": "/^FALLO/" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#FF2E2E" } }, { "id": "custom.lineWidth", "value": 3 }, { "id": "custom.hideFrom", "value": { "legend": true, "tooltip": false, "viz": false } }] }
         ]
       },
       "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["min","max","mean","lastNotNull"] }, "tooltip": { "mode": "multi" } }
