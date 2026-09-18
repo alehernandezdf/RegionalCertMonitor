@@ -196,7 +196,7 @@
           { "matcher": { "id": "byName", "options": "GT NUC .com.gt" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#8AB8FF" } }] },
           { "matcher": { "id": "byName", "options": "SV NUC .com.sv" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#FFFFFF" } }] },
           { "matcher": { "id": "byName", "options": "DO NUC .com.do" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#1F60C4" } }] },
-          { "matcher": { "id": "byName", "options": "PA NUC .com.pa" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#F2495C" } }] },
+          { "matcher": { "id": "byName", "options": "PA NUC .com.pa" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#A02040" } }] },
           { "matcher": { "id": "byRegexp", "options": "/^FALLO/" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#FF2E2E" } }, { "id": "custom.lineWidth", "value": 3 }, { "id": "custom.hideFrom", "value": { "legend": true, "tooltip": false, "viz": false } }] }
         ]
       },
