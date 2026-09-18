@@ -62,7 +62,8 @@ public class WhatsAppNotificationService : INotificationService
                             parameters = new object[]
                             {
                                 new { type = "text", text = $"{CountryFlag(result.Country)} {CountryName(result.Country)}" },
-                                new { type = "text", text = ApiLabel(result.CertificationType) },
+                                // FIX::BE-672::2026-09-18::AHL::Incluir el endpoint exacto en el parametro de servicio (la plantilla Meta es fija, no admite lineas nuevas sin re-aprobacion)
+                                new { type = "text", text = ServiceWithEndpoint(result) },
                                 new { type = "text", text = result.ResultStatus ? "OK" : "FALLO" },
                                 new { type = "text", text = $"{result.TransactionTimeMs}ms" },
                                 new { type = "text", text = Sanitize(result.EventErrorMessage) }
@@ -98,6 +99,13 @@ public class WhatsAppNotificationService : INotificationService
         var clean = text.Replace("\r", " ").Replace("\n", " ").Replace("\t", " ");
         while (clean.Contains("  ")) clean = clean.Replace("  ", " ");
         return clean.Length > 200 ? clean[..200] : clean;
+    }
+
+    // El endpoint va dentro del mismo parametro porque los params de plantilla Meta no aceptan saltos de linea
+    private static string ServiceWithEndpoint(MonitoringResult result)
+    {
+        var label = ApiLabel(result.CertificationType);
+        return string.IsNullOrWhiteSpace(result.Endpoint) ? label : $"{label} | {result.Endpoint}";
     }
 
     private static string ApiLabel(CertificationType type) => type switch
