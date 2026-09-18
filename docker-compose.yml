@@ -17,6 +17,9 @@ services:
       - ./src/Monitoreo.Worker/appsettings.DO.json:/app/appsettings.DO.json:ro
       - ./src/Monitoreo.Worker/appsettings.PA.json:/app/appsettings.PA.json:ro
       - ./src/Monitoreo.Worker/appsettings.GT2.json:/app/appsettings.GT2.json:ro
+      - ./src/Monitoreo.Worker/appsettings.SV2.json:/app/appsettings.SV2.json:ro
+      - ./src/Monitoreo.Worker/appsettings.DO2.json:/app/appsettings.DO2.json:ro
+      - ./src/Monitoreo.Worker/appsettings.PA2.json:/app/appsettings.PA2.json:ro
       - ./src/Monitoreo.Worker/appsettings.Secrets.json:/app/appsettings.Secrets.json:ro
       # FEAT::BE-672::2026-09-02::AHL::Templates movidos a la raiz del repo (templates_xml_json) para facil acceso; dentro del contenedor sigue siendo /app/Templates
       - ./templates_xml_json:/app/Templates:ro

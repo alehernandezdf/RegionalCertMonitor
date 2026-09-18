@@ -91,6 +91,9 @@ public class AwsConfigurationProvider : IConfigurationProvider
         int GetIntParam(string key, int defaultValue) =>
             parameters.TryGetValue(key, out var val) && int.TryParse(val, out var i) ? i : defaultValue;
 
+        long GetLongParam(string key, long defaultValue) =>
+            parameters.TryGetValue(key, out var val) && long.TryParse(val, out var l) ? l : defaultValue;
+
         return new CountryConfig
         {
             CountryCode = countryCode,
@@ -108,6 +111,10 @@ public class AwsConfigurationProvider : IConfigurationProvider
             NucAuthMode = GetParam("nuc-auth-mode"),
             NucUsernameFormat = GetParam("nuc-username-format"),
             NucCredentialSecretArn = GetParam("nuc-credential-secret-arn"),
+            NucConsecutivoBase = GetLongParam("nuc-consecutivo-base", 9900000),
+            NucSecuencialBase = GetLongParam("nuc-secuencial-base", 400000000000),
+            NucNumeroDFBase = GetLongParam("nuc-numerodf-base", 1140000000),
+            NucCodigoSeguridadBase = GetLongParam("nuc-codigoseguridad-base", 800000),
             RequiresPfxSignature = GetBoolParam("requires-pfx-signature"),
             PfxSecretArn = GetParam("pfx-secret-arn"),
             PfxPasswordSecretArn = GetParam("pfx-password-secret-arn"),
@@ -149,6 +156,10 @@ public class AwsConfigurationProvider : IConfigurationProvider
             NucAuthMode = section["NucAuthMode"] ?? "dynamic",
             NucUsernameFormat = section["NucUsernameFormat"],
             NucCredentialSecretArn = section["NucCredentialSecretArn"],
+            NucConsecutivoBase = section.GetValue<long>("NucConsecutivoBase", 9900000),
+            NucSecuencialBase = section.GetValue<long>("NucSecuencialBase", 400000000000),
+            NucNumeroDFBase = section.GetValue<long>("NucNumeroDFBase", 1140000000),
+            NucCodigoSeguridadBase = section.GetValue<long>("NucCodigoSeguridadBase", 800000),
             RequiresPfxSignature = section.GetValue<bool>("RequiresPfxSignature"),
             PfxSecretArn = section["PfxSecretArn"],
             PfxPasswordSecretArn = section["PfxPasswordSecretArn"],

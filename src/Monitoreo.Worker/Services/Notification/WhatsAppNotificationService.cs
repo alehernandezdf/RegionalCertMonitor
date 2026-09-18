@@ -121,9 +121,12 @@ public class WhatsAppNotificationService : INotificationService
         "GT" => "GUATEMALA",
         "GT2" => "GUATEMALA",
         "SV" => "EL SALVADOR",
+        "SV2" => "EL SALVADOR",
         "CR" => "COSTA RICA",
         "DO" => "REPUBLICA DOMINICANA",
+        "DO2" => "REPUBLICA DOMINICANA",
         "PA" => "PANAMA",
+        "PA2" => "PANAMA",
         _ => code
     };
 
@@ -132,9 +135,12 @@ public class WhatsAppNotificationService : INotificationService
         "GT" => "🇬🇹",
         "GT2" => "🇬🇹",
         "SV" => "🇸🇻",
+        "SV2" => "🇸🇻",
         "CR" => "🇨🇷",
         "DO" => "🇩🇴",
+        "DO2" => "🇩🇴",
         "PA" => "🇵🇦",
+        "PA2" => "🇵🇦",
         _ => "🌐"
     };
 }

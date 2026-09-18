@@ -170,13 +170,25 @@ Los templates son la **fuente de verdad** de los datos fijos de cada documento (
 | País | Código | ASMX | NUC | API V3 |
 |---|---|---|---|---|
 | 🇬🇹 Guatemala | GT | ✅ | ✅ | ✅ |
-| 🇬🇹 Guatemala (endpoint alterno `.com.gt`) | GT2 | ✅ | — | — |
 | 🇸🇻 El Salvador | SV | ✅ | ✅ | — |
 | 🇨🇷 Costa Rica | CR | ✅ | ✅ | — |
 | 🇩🇴 República Dominicana | DO | — | ✅ | — |
 | 🇵🇦 Panamá | PA | — | ✅ | — |
 
 Cada país tiene su propio `appsettings.{PAIS}.json` con endpoints, credenciales de referencia, intervalo, umbral de alerta y flags de notificación.
+
+### 🛰️ Sondas de ruta `.pais` (diagnóstico, sin alertas)
+
+Además de las sondas principales (que van por dominios `.com`, la ruta estable), existen sondas gemelas que vigilan **las rutas por dominio de país** — históricamente inestables (resets de conexión intermitentes, HTTP 520). No alertan (flags de notificación apagados); se observan en el dashboard **Monitoreo Equipo** y sirven de evidencia para infraestructura. CR no tiene ruta `.pais` (solo existe `.com`).
+
+| Sonda | Ruta vigilada | Tipos | Numeración propia (no colisiona con la sonda `.com`) |
+|---|---|---|---|
+| GT2 | `felgtaws.digifact.com.gt` | ASMX + NUC | no aplica (GT no numera) |
+| SV2 | `cert.digifact.com.sv/sv.com.apinucv2` | NUC | `NucSecuencialBase: 410000000000` |
+| DO2 | `apinuc.digifact.com.do` | NUC | `NucConsecutivoBase: 99000000` |
+| PA2 | `apinuc.digifact.com.pa` | NUC | `NucNumeroDFBase: 1150000000`, `NucCodigoSeguridadBase: 900000000` |
+
+Las bases de numeración NUC son parametrizables por sonda en su appsettings (defaults = valores históricos). Para encender alertas de una sonda `.pais`: poner `NotificationsEmailEnabled`/`NotificationsWhatsAppEnabled` en `true` en su `appsettings.{SONDA}.json` y recrear el contenedor.
 
 ## 🔔 Alertas y Notificaciones
 
@@ -217,8 +229,9 @@ El worker la consume en ≤15 segundos y envía una alerta de PRUEBA a los desti
 
 Grafana se auto-provisiona al levantar el compose (datasource PostgreSQL + dashboards):
 
-- **monitoreo.json** — vista regional: disponibilidad por país, tiempos de respuesta, últimos fallos
-- **monitoreo-pais.json** — detalle por país con filtros por tipo de certificación y rango de tiempo
+- **monitoreo.json** — vista regional (la usa gerencia): disponibilidad por país, tiempos de respuesta, últimos fallos
+- **monitoreo-equipo.json** — para el equipo de monitoreo: misma vista regional + panel de rutas `.pais` (GT2/SV2/DO2/PA2) con su tabla de errores
+- **monitoreo-pais.json** — panel histórico de GT2 ASMX (absorbido por el de equipo)
 
 ## 🧪 Testing
 
