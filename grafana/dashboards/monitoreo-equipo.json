@@ -127,7 +127,7 @@
       "id": 6,
       "title": "⚠️ Últimos Errores",
       "type": "table",
-      "gridPos": { "x": 16, "y": 8, "w": 8, "h": 8 },
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 9 },
       "datasource": { "type": "grafana-postgresql-datasource", "uid": "monitoreo-pg" },
       "targets": [
         {
@@ -158,9 +158,9 @@
     },
     {
       "id": 7,
-      "title": "🛰️ Rutas .pais (dominios de país — sondas de diagnóstico, sin alertas)",
+      "title": "🛰️ Rutas .pais (dominios de país)",
       "type": "timeseries",
-      "gridPos": { "x": 0, "y": 16, "w": 16, "h": 9 },
+      "gridPos": { "x": 16, "y": 8, "w": 8, "h": 8 },
       "datasource": { "type": "grafana-postgresql-datasource", "uid": "monitoreo-pg" },
       "targets": [
         { "refId": "B", "format": "time_series", "rawSql": "SELECT created_at AS time, transaction_time_ms / 1000.0 AS \"GT NUC .com.gt\" FROM monitoring_results WHERE country = 'GT2' AND certification_type = 'NUC' AND $__timeFilter(created_at) ORDER BY created_at" },
@@ -187,7 +187,7 @@
       "id": 8,
       "title": "⚠️ Últimos Errores rutas .pais",
       "type": "table",
-      "gridPos": { "x": 16, "y": 16, "w": 8, "h": 9 },
+      "gridPos": { "x": 12, "y": 16, "w": 12, "h": 9 },
       "datasource": { "type": "grafana-postgresql-datasource", "uid": "monitoreo-pg" },
       "targets": [
         {
