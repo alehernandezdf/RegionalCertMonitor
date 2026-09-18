@@ -106,14 +106,14 @@ public class EmailNotificationService : INotificationService
     private static string CountryName(string code) => code switch
     {
         "GT" => "GUATEMALA",
-        "GT2" => "GUATEMALA",
+        "GT2" => "GUATEMALA (SONDA .PAIS)",
         "SV" => "EL SALVADOR",
-        "SV2" => "EL SALVADOR",
+        "SV2" => "EL SALVADOR (SONDA .PAIS)",
         "CR" => "COSTA RICA",
         "DO" => "REPUBLICA DOMINICANA",
-        "DO2" => "REPUBLICA DOMINICANA",
+        "DO2" => "REPUBLICA DOMINICANA (SONDA .PAIS)",
         "PA" => "PANAMA",
-        "PA2" => "PANAMA",
+        "PA2" => "PANAMA (SONDA .PAIS)",
         _ => code
     };
 }
