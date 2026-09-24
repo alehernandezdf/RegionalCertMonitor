@@ -33,7 +33,7 @@ Cada 60 segundos ejecuta certificaciones de prueba reales contra los endpoints p
 - 📧 Alertas por Email (SMTP/Amazon SES) y WhatsApp (Meta Cloud API) **solo cuando hay fallos**
 - 👥 Destinatarios de alertas en base de datos, parametrizables **por país** y por canal, sin redeploy
 - 🧪 Disparador manual de alertas de prueba (`INSERT` en `alert_test_queue`)
-- 🛡️ Resiliencia con Polly (retry, circuit breaker, timeouts) y cooldown anti-spam configurable
+- 🛡️ Sondas independientes: cada certificación abre su propia conexión, con timeout, sin reintentos ni circuit breaker (un fallo de un país nunca bloquea a otro); cooldown anti-spam configurable
 - 📝 Logging estructurado con Serilog (consola; CloudWatch opcional en modo Production)
 
 ## 🏗️ Arquitectura
@@ -77,7 +77,7 @@ graph TB
 | Base de datos | PostgreSQL 16 (contenedor del mismo compose) |
 | Dashboards | Grafana (contenedor del mismo compose, puerto `3001`) |
 | Admin local | pgAdmin 4 (puerto `5050`) |
-| Resiliencia | Polly v8 (retry, circuit breaker, timeout) |
+| Resiliencia | Timeout por sonda; Polly (retry + circuit breaker) solo en el envío de WhatsApp |
 | Logging | Serilog (consola; sink CloudWatch en Production) |
 | Notificaciones | Email vía SMTP (Amazon SES) + WhatsApp Graph API |
 | Testing | xUnit + FsCheck (property-based) + Testcontainers |
