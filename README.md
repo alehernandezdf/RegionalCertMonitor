@@ -48,8 +48,8 @@ graph TB
     end
 
     subgraph "Endpoints monitoreados"
-        ASMX[ASMX SOAP<br/>GT, GT2, SV, CR]
-        NUC[NUC REST<br/>GT, SV, CR, DO, PA]
+        ASMX[ASMX SOAP<br/>GT, SV, CR]
+        NUC[NUC REST<br/>GT, SV, CR, DO, PA<br/>+ rutas .pais GT2, SV2, DO2, PA2]
         API[API V3 REST<br/>GT]
     end
 
@@ -183,7 +183,7 @@ Además de las sondas principales (que van por dominios `.com`, la ruta estable)
 
 | Sonda | Ruta vigilada | Tipos | Numeración propia (no colisiona con la sonda `.com`) |
 |---|---|---|---|
-| GT2 | `felgtaws.digifact.com.gt` | ASMX + NUC | no aplica (GT no numera) |
+| GT2 | `felgtaws.digifact.com.gt` | NUC | no aplica (GT no numera) |
 | SV2 | `cert.digifact.com.sv/sv.com.apinucv2` | NUC | `NucSecuencialBase: 410000000000` |
 | DO2 | `apinuc.digifact.com.do` | NUC | `NucConsecutivoBase: 99000000` |
 | PA2 | `apinuc.digifact.com.pa` | NUC | `NucNumeroDFBase: 1150000000`, `NucCodigoSeguridadBase: 900000000` |
@@ -231,7 +231,7 @@ Grafana se auto-provisiona al levantar el compose (datasource PostgreSQL + dashb
 
 - **monitoreo.json** — vista regional (la usa gerencia): disponibilidad por país, tiempos de respuesta, últimos fallos
 - **monitoreo-equipo.json** — para el equipo de monitoreo: misma vista regional + panel de rutas `.pais` (GT2/SV2/DO2/PA2) con su tabla de errores
-- **monitoreo-pais.json** — panel histórico de GT2 ASMX (absorbido por el de equipo)
+- **monitoreo-pais.json** — panel histórico de GT2 ASMX (sonda apagada desde 2026-09-22: GT2 NUC ya vigila la ruta `.com.gt`); solo muestra datos viejos
 
 ## 🧪 Testing
 
