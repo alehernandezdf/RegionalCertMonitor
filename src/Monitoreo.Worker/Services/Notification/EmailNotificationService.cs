@@ -51,6 +51,10 @@ public class EmailNotificationService : INotificationService
         msg.Subject = subject;
         msg.Body = body;
         msg.IsBodyHtml = true;
+        // FIX::BE-672::2026-09-21::AHL::Alertas como correo de PRIORIDAD ALTA (bandera roja en Outlook/Gmail)
+        msg.Priority = MailPriority.High;
+        msg.Headers.Add("Importance", "High");
+        msg.Headers.Add("X-MSMail-Priority", "High");
 
         using var smtp = new SmtpClient(smtpServer, smtpPort)
         {
