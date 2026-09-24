@@ -132,27 +132,23 @@ try
     // HttpClient con Polly: retry exponencial, circuit breaker, timeouts
     var resilienceConfig = builder.Configuration.GetSection("Resilience");
 
+    // FIX::BE-672::2026-09-24::AHL::Sondas sin circuit breaker ni retry, y con conexion nueva en cada certificacion.
+    // El circuit breaker era UNO compartido por todos los paises: 5 fallos seguidos bloqueaban 30s todas las sondas y fabricaban alertas masivas falsas.
+    // Reusar conexiones ociosas ~60s (= intervalo del ciclo) producia "Connection reset by peer" sobre conexiones que el otro lado ya habia cerrado.
+    // Un reintento tampoco sirve: repetiria la certificacion con el mismo correlativo.
     builder.Services.AddHttpClient("AsmxClient")
-        .AddTransientHttpErrorPolicy(p => p.WaitAndRetryAsync(
-            resilienceConfig.GetValue("Asmx:RetryCount", 3),
-            attempt => TimeSpan.FromSeconds(
-                Math.Pow(resilienceConfig.GetValue("Asmx:RetryBaseDelaySeconds", 2.0), attempt))))
-        .AddTransientHttpErrorPolicy(p => p.CircuitBreakerAsync(
-            resilienceConfig.GetValue("Asmx:CircuitBreakerFailureThreshold", 5),
-            TimeSpan.FromSeconds(resilienceConfig.GetValue("Asmx:CircuitBreakerDurationSeconds", 30))))
         .ConfigureHttpClient(c =>
-            c.Timeout = TimeSpan.FromSeconds(resilienceConfig.GetValue("Asmx:TimeoutSeconds", 30)));
+        {
+            c.Timeout = TimeSpan.FromSeconds(resilienceConfig.GetValue("Asmx:TimeoutSeconds", 30));
+            c.DefaultRequestHeaders.ConnectionClose = true;
+        });
 
     builder.Services.AddHttpClient("NucClient")
-        .AddTransientHttpErrorPolicy(p => p.WaitAndRetryAsync(
-            resilienceConfig.GetValue("Nuc:RetryCount", 3),
-            attempt => TimeSpan.FromSeconds(
-                Math.Pow(resilienceConfig.GetValue("Nuc:RetryBaseDelaySeconds", 2.0), attempt))))
-        .AddTransientHttpErrorPolicy(p => p.CircuitBreakerAsync(
-            resilienceConfig.GetValue("Nuc:CircuitBreakerFailureThreshold", 5),
-            TimeSpan.FromSeconds(resilienceConfig.GetValue("Nuc:CircuitBreakerDurationSeconds", 30))))
         .ConfigureHttpClient(c =>
-            c.Timeout = TimeSpan.FromSeconds(resilienceConfig.GetValue("Nuc:TimeoutSeconds", 30)));
+        {
+            c.Timeout = TimeSpan.FromSeconds(resilienceConfig.GetValue("Nuc:TimeoutSeconds", 30));
+            c.DefaultRequestHeaders.ConnectionClose = true;
+        });
 
     builder.Services.AddHttpClient("WhatsAppClient")
         .AddTransientHttpErrorPolicy(p => p.WaitAndRetryAsync(
