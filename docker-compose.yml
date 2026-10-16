@@ -1,6 +1,14 @@
 # BEGIN-FEAT::BE-672::2026-03-17::AHL::Docker Compose con Worker, PostgreSQL 16, pgAdmin
+# FIX::BE-672::2026-10-16::AHL::Rotacion de logs: sin limite, el json-log del worker llego a 3.5 GB y casi llena el disco (ya paso en julio)
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "50m"
+    max-file: "3"
+
 services:
   monitoreo-worker:
+    logging: *default-logging
     build:
       context: .
       dockerfile: Dockerfile
@@ -31,6 +39,7 @@ services:
       - monitoreo-net
 
   postgres:
+    logging: *default-logging
     image: postgres:16-alpine
     container_name: monitoreo-postgres
     environment:
@@ -52,6 +61,7 @@ services:
       - monitoreo-net
 
   pgadmin:
+    logging: *default-logging
     image: dpage/pgadmin4:latest
     container_name: monitoreo-pgadmin
     environment:
@@ -70,6 +80,7 @@ services:
       - monitoreo-net
 
   grafana:
+    logging: *default-logging
     image: grafana/grafana:latest
     container_name: monitoreo-grafana
     environment:
